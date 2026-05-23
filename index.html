@@ -12,1078 +12,1235 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
 <style>
+
 :root{
-  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1d27;--bg4:#22263a;
-  --border:#2a2e42;--border2:#363b55;
-  --text:#e4e6f0;--text2:#8b90a8;--text3:#5a5f78;
-  --accent:#7c6af7;--accent2:#9d8ff9;
-  --green:#3dd68c;--green2:#2aaf72;
-  --red:#f55f6d;--yellow:#f5c842;--cyan:#38d9f5;--orange:#f5874a;
-  --mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;
-  --sw:280px;--r:8px;--rl:14px;
+  --bg:#0e1117;--bg2:#161b22;--bg3:#21262d;--bg4:#2d333b;
+  --bd:#30363d;--bd2:#484f58;
+  --tx:#e6edf3;--tx2:#8b949e;--tx3:#656d76;
+  --ac:#7c6af7;--ac2:#a89af9;
+  --gr:#3fb950;--gr2:#238636;
+  --re:#f85149;--ye:#e3b341;--cy:#58a6ff;--pu:#bc8cff;--or:#ffa657;
+  --mono:'JetBrains Mono',monospace;
+  --head:'Syne',sans-serif;
+  --sw:270px;--r:6px;--rl:12px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px;line-height:1.65;overflow-x:hidden}
+body{font-family:var(--mono);background:var(--bg);color:var(--tx);
+     min-height:100vh;display:flex;font-size:14px;line-height:1.6;overflow-x:hidden}
 
-/* SIDEBAR */
-#sb{width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100;overflow:hidden}
-.sb-hd{padding:20px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-.sb-logo{font-family:var(--head);font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
-.sb-logo-i{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700;flex-shrink:0}
-.sb-prog{margin-top:12px}
-.sb-pbar{height:3px;background:var(--bg4);border-radius:99px;overflow:hidden;margin-top:6px}
-.sb-pfill{height:100%;background:var(--green);border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1);width:0%}
-.sb-ptxt{font-size:11px;color:var(--text3)}
-.sb-nav{flex:1;overflow-y:auto;padding:10px 0;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
-.sb-nav::-webkit-scrollbar{width:4px}
-.sb-nav::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
-.ni{display:flex;align-items:center;gap:10px;padding:8px 20px;cursor:pointer;transition:background .15s;position:relative;border:none;background:none;width:100%;text-align:left}
+/* ── SIDEBAR ── */
+#sb{width:var(--sw);background:var(--bg2);border-right:1px solid var(--bd);
+    height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;
+    z-index:100;overflow:hidden;transition:transform .3s}
+.sb-top{padding:18px 16px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sb-icon{width:30px;height:30px;background:var(--ac);border-radius:7px;
+         display:flex;align-items:center;justify-content:center;
+         font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-title{font-family:var(--head);font-size:14px;font-weight:800;
+          color:var(--tx);letter-spacing:-.02em}
+.pb{height:3px;background:var(--bg4);border-radius:99px;overflow:hidden;margin-top:4px}
+.pb-fill{height:100%;background:var(--gr);border-radius:99px;
+         transition:width .5s cubic-bezier(.4,0,.2,1)}
+.pb-txt{font-size:11px;color:var(--tx3);margin-bottom:4px}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0;
+        scrollbar-width:thin;scrollbar-color:var(--bd2) transparent}
+.sb-nav::-webkit-scrollbar{width:3px}
+.sb-nav::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:99px}
+.ni{display:flex;align-items:center;gap:9px;padding:7px 16px;
+    cursor:pointer;border:none;background:none;width:100%;text-align:left;
+    position:relative;transition:background .12s;border-radius:0}
 .ni:hover{background:var(--bg3)}
-.ni.active{background:var(--bg4);color:var(--accent2)}
-.ni.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:0 3px 3px 0}
-.ni-num{font-size:10px;color:var(--text3);width:18px;flex-shrink:0}
-.ni.active .ni-num{color:var(--accent)}
-.ni-lbl{font-size:12px;color:var(--text2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ni.active .ni-lbl{color:var(--accent2)}
-.ni-chk{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;transition:all .3s}
-.ni-chk.done{background:var(--green);border-color:var(--green);color:#fff}
-.ni-chk.part{border-color:var(--yellow);background:rgba(245,200,66,.15);color:var(--yellow);font-size:10px}
+.ni.on{background:var(--bg4)}
+.ni.on::before{content:'';position:absolute;left:0;top:0;bottom:0;
+               width:2px;background:var(--ac);border-radius:0 2px 2px 0}
+.ni-n{font-size:10px;color:var(--tx3);width:16px;flex-shrink:0;font-weight:500}
+.ni.on .ni-n{color:var(--ac)}
+.ni-l{font-size:12px;color:var(--tx2);flex:1;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
+.ni.on .ni-l{color:var(--ac2)}
+.ni-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--bd2);
+        display:flex;align-items:center;justify-content:center;
+        font-size:8px;flex-shrink:0;transition:all .25s}
+.ni-dot.d{background:var(--gr);border-color:var(--gr);color:#0d1117}
+.ni-dot.p{border-color:var(--ye);background:rgba(227,179,65,.12);color:var(--ye);font-size:9px}
 
-/* MAIN */
-#main{margin-left:var(--sw);flex:1;min-height:100vh}
-.page{display:none;max-width:860px;margin:0 auto;padding:48px 40px 80px;animation:fi .25s ease}
-.page.active{display:block}
-@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.ph{margin-bottom:32px}
-.p-num{font-size:11px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
-.p-title{font-family:var(--head);font-size:28px;font-weight:800;color:var(--text);line-height:1.2;letter-spacing:-.03em}
-.p-sub{margin-top:8px;font-size:13px;color:var(--text2);line-height:1.7;max-width:600px}
+/* ── MAIN ── */
+#main{margin-left:var(--sw);flex:1;min-height:100vh;overflow-x:hidden}
+.pg{display:none;max-width:820px;margin:0 auto;padding:44px 36px 80px;
+    animation:fi .22s ease}
+.pg.on{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.ph{margin-bottom:28px}
+.p-n{font-size:10px;color:var(--ac);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.p-t{font-family:var(--head);font-size:26px;font-weight:800;color:var(--tx);
+     line-height:1.2;letter-spacing:-.03em}
+.p-s{margin-top:7px;font-size:13px;color:var(--tx2);max-width:560px}
 
-/* THEORY */
-.th-sec{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:28px;overflow:hidden}
-.th-tog{display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;user-select:none;background:none;border:none;width:100%;color:var(--text);transition:background .15s}
-.th-tog:hover{background:var(--bg3)}
-.th-icon{width:28px;height:28px;background:rgba(124,106,247,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.th-lbl{flex:1;font-family:var(--head);font-size:14px;font-weight:600;text-align:left}
-.th-arr{font-size:12px;color:var(--text3);transition:transform .25s}
-.th-tog.open .th-arr{transform:rotate(180deg)}
-.th-body{padding:0 20px 20px;border-top:1px solid var(--border);display:none}
-.th-body.open{display:block}
-.th-body h4{font-family:var(--head);font-size:13px;font-weight:700;color:var(--accent2);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.05em}
-.th-body p{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:10px}
-.th-body ul{margin:0 0 12px 4px;list-style:none}
-.th-body ul li{font-size:13px;color:var(--text2);line-height:1.75;padding-left:14px;position:relative}
-.th-body ul li::before{content:'→';position:absolute;left:0;color:var(--accent);font-size:11px}
-code{font-family:var(--mono);background:var(--bg4);color:var(--cyan);padding:1px 6px;border-radius:4px;font-size:12px}
-.cb{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin:12px 0;overflow-x:auto}
-.cb pre{font-family:var(--mono);font-size:12px;color:var(--text);line-height:1.7;white-space:pre}
-.cb pre .c{color:var(--cyan)}.cb pre .g{color:var(--green)}.cb pre .y{color:var(--yellow)}
-.cb pre .a{color:var(--accent2)}.cb pre .d{color:var(--text2)}.cb pre .r{color:var(--red)}.cb pre .o{color:var(--orange)}
-.ib{display:flex;gap:10px;background:rgba(124,106,247,.08);border:1px solid rgba(124,106,247,.25);border-radius:var(--r);padding:12px 14px;margin:12px 0}
-.ib .ii{font-size:16px;flex-shrink:0;margin-top:1px}
-.ib .it{font-size:12px;color:var(--text2);line-height:1.7}
-.ib .it strong{color:var(--accent2);font-weight:500}
-.wb{display:flex;gap:10px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:var(--r);padding:12px 14px;margin:12px 0}
-.wb .it{font-size:12px;color:var(--text2);line-height:1.7}
-.wb .it strong{color:var(--yellow);font-weight:500}
+/* ── THEORY ── */
+.th{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);
+    margin-bottom:24px;overflow:hidden}
+.th-hd{display:flex;align-items:center;gap:10px;padding:13px 16px;
+       cursor:pointer;user-select:none;background:none;border:none;
+       width:100%;color:var(--tx);transition:background .12s}
+.th-hd:hover{background:var(--bg3)}
+.th-ic{width:26px;height:26px;background:rgba(124,106,247,.15);border-radius:5px;
+       display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.th-lb{flex:1;font-family:var(--head);font-size:13px;font-weight:700;text-align:left;color:var(--tx)}
+.th-ar{font-size:11px;color:var(--tx3);transition:transform .22s}
+.th-hd.op .th-ar{transform:rotate(180deg)}
+.th-bd{padding:0 16px 16px;border-top:1px solid var(--bd);display:none}
+.th-bd.op{display:block}
+.th-bd h4{font-family:var(--head);font-size:12px;font-weight:700;color:var(--ac2);
+          margin:16px 0 7px;text-transform:uppercase;letter-spacing:.04em}
+.th-bd p{font-size:13px;color:var(--tx2);line-height:1.7;margin-bottom:9px}
+.th-bd ul{margin:0 0 10px 4px;list-style:none}
+.th-bd ul li{font-size:13px;color:var(--tx2);line-height:1.7;
+             padding-left:12px;position:relative}
+.th-bd ul li::before{content:'›';position:absolute;left:0;color:var(--ac)}
+code{font-family:var(--mono);background:var(--bg4);color:var(--cy);
+     padding:1px 5px;border-radius:4px;font-size:12px}
+b{font-weight:600;color:var(--tx)}
+.code-block{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);
+            padding:14px 16px;margin:10px 0;overflow-x:auto}
+.code-block pre{font-family:var(--mono);font-size:12px;color:var(--tx);line-height:1.7;white-space:pre}
+.code-block pre .cy{color:var(--cy)}.code-block pre .gr{color:var(--gr)}
+.code-block pre .ye{color:var(--ye)}.code-block pre .pu{color:var(--pu)}
+.code-block pre .or{color:var(--or)}.code-block pre .re{color:var(--re)}
+.code-block pre .cm{color:var(--tx3)}
+.note{display:flex;gap:9px;border-radius:var(--r);padding:10px 13px;margin:10px 0}
+.note.info{background:rgba(124,106,247,.07);border:1px solid rgba(124,106,247,.2)}
+.note.warn{background:rgba(227,179,65,.06);border:1px solid rgba(227,179,65,.18)}
+.note span{font-size:15px;flex-shrink:0;margin-top:1px}
+.note p{font-size:12px;color:var(--tx2);line-height:1.65}
+.note.info p b{color:var(--ac2)}.note.warn p b{color:var(--ye)}
 
-/* EXERCISES */
-.ex-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-.ex-hd h3{font-family:var(--head);font-size:16px;font-weight:700;color:var(--text)}
-.ex-cnt{font-size:11px;color:var(--text3)}
-.ex{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:16px;overflow:hidden;transition:border-color .3s}
-.ex.solved{border-color:var(--green2)}
-.ex.solved .ex-h{background:rgba(61,214,140,.04)}
-.ex-h{padding:14px 18px;display:flex;align-items:flex-start;gap:12px}
-.ex-badge{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
-.ex-badge.p{background:var(--bg4);color:var(--text3)}
-.ex-badge.s{background:var(--green);color:#0d1a12}
-.ex-badge.e{background:var(--red);color:#fff}
-.ex-meta{flex:1}
-.ex-type{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px}
-.tc{color:var(--cyan)}.to{color:var(--orange)}.ty{color:var(--yellow)}.ta{color:var(--accent2)}
-.ex-q{font-size:14px;color:var(--text);line-height:1.6}
-.ex-b{padding:0 18px 16px;border-top:1px solid var(--border)}
-.ex-hint{font-size:12px;color:var(--text3);padding:10px 0 8px;line-height:1.6}
-.ex-hint code{color:var(--yellow);font-size:11px}
-.CodeMirror{font-family:var(--mono)!important;font-size:13px!important;border-radius:var(--r)!important;border:1px solid var(--border)!important;height:auto!important}
-.CodeMirror-scroll{min-height:38px}
-.CodeMirror-focused{border-color:var(--accent)!important}
-.sl .CodeMirror-scroll{max-height:42px;overflow:hidden!important}
+/* ── EXERCISES ── */
+.ex-hd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.ex-hd h3{font-family:var(--head);font-size:15px;font-weight:700;color:var(--tx)}
+.ex-ct{font-size:11px;color:var(--tx3)}
+.ex{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);
+    margin-bottom:14px;overflow:hidden;transition:border-color .25s}
+.ex.ok{border-color:var(--gr2)}
+.ex-top{padding:13px 16px;display:flex;align-items:flex-start;gap:11px}
+.exn{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;
+     justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px}
+.exn.p{background:var(--bg4);color:var(--tx3)}
+.exn.s{background:var(--gr);color:#0d1117}
+.ex-info{flex:1}
+.ex-tp{font-size:10px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.ex-tp.cmd{color:var(--cy)}.ex-tp.bash{color:var(--or)}.ex-tp.c{color:var(--pu)}
+.ex-tp.regex{color:var(--ye)}.ex-tp.mc{color:var(--ac2)}
+.ex-q{font-size:13px;color:var(--tx);line-height:1.55}
+.ex-body{padding:0 16px 14px;border-top:1px solid var(--bd)}
+.ex-hint{font-size:12px;color:var(--tx3);padding:9px 0 7px;line-height:1.6}
+.ex-hint code{color:var(--ye);font-size:11px}
+.CodeMirror{font-family:var(--mono)!important;font-size:13px!important;
+            border-radius:var(--r)!important;border:1px solid var(--bd)!important;height:auto!important}
+.CodeMirror-scroll{min-height:36px}
+.CodeMirror-focused{border-color:var(--ac)!important;box-shadow:0 0 0 2px rgba(124,106,247,.15)!important}
+.sl .CodeMirror-scroll{max-height:40px;overflow:hidden!important}
 .ml .CodeMirror-scroll{min-height:130px}
-.ex-act{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
-.btn-c{padding:7px 18px;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
-.btn-c:hover{background:var(--accent2);transform:translateY(-1px)}
-.btn-c:active{transform:translateY(0)}
-.btn-c:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-h{padding:7px 14px;background:transparent;border:1px solid var(--border2);border-radius:var(--r);color:var(--text3);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .15s}
-.btn-h:hover{border-color:var(--yellow);color:var(--yellow)}
-.btn-r{padding:7px 14px;background:transparent;border:1px solid var(--border2);border-radius:var(--r);color:var(--text3);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .15s;margin-left:auto}
-.btn-r:hover{color:var(--text2)}
-.fb{margin-top:10px;border-radius:var(--r);padding:12px 14px;font-size:12px;line-height:1.7;display:none;animation:fi .2s ease}
-.fb.show{display:block}
-.fb.ok{background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.25);color:#6ee8a8}
-.fb.err{background:rgba(245,95,109,.08);border:1px solid rgba(245,95,109,.25);color:#f8a3aa}
-.fb.hint{background:rgba(245,200,66,.07);border:1px solid rgba(245,200,66,.2);color:var(--yellow)}
-.fb code{background:rgba(255,255,255,.08);color:inherit;font-size:12px}
-.mc-opts{display:flex;flex-direction:column;gap:6px;padding:8px 0}
-.mc-opt{padding:9px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;font-family:var(--mono);font-size:13px;color:var(--text2);transition:all .15s;text-align:left;display:flex;gap:10px;align-items:flex-start}
-.mc-opt:hover:not(:disabled){border-color:var(--accent);color:var(--text);background:var(--bg4)}
-.mc-opt.ok{border-color:var(--green);color:var(--green);background:rgba(61,214,140,.06)}
-.mc-opt.ng{border-color:var(--red);color:var(--red);background:rgba(245,95,109,.06)}
-.mc-opt:disabled{cursor:default}
-.mc-k{background:var(--bg4);border-radius:4px;padding:0 6px;font-size:11px;color:var(--text3);flex-shrink:0;min-width:22px;text-align:center}
-.pg-nav{display:flex;justify-content:space-between;margin-top:40px;padding-top:24px;border-top:1px solid var(--border)}
-.btn-nav{padding:9px 18px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text2);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px}
-.btn-nav:hover{border-color:var(--accent);color:var(--accent2)}
-.btn-nav:disabled{opacity:.3;cursor:not-allowed}
-#mbt{display:none;position:fixed;top:16px;left:16px;z-index:200;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text2)}
-/* score badge */
-.score-wrap{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}
-.score-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;flex:1;min-width:100px}
-.score-card .sv{font-size:22px;font-weight:500;color:var(--text)}
-.score-card .sl{font-size:11px;color:var(--text3);margin-top:2px}
+.acts{display:flex;gap:7px;margin-top:9px;align-items:center;flex-wrap:wrap}
+.btn-go{padding:6px 16px;background:var(--ac);border:none;border-radius:var(--r);
+        color:#fff;font-family:var(--mono);font-size:12px;font-weight:500;
+        cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:5px}
+.btn-go:hover{background:var(--ac2);transform:translateY(-1px)}
+.btn-go:active{transform:translateY(0)}
+.btn-go:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-tip{padding:6px 13px;background:transparent;border:1px solid var(--bd2);
+         border-radius:var(--r);color:var(--tx3);font-family:var(--mono);
+         font-size:12px;cursor:pointer;transition:all .14s}
+.btn-tip:hover{border-color:var(--ye);color:var(--ye)}
+.btn-rst{padding:6px 13px;background:transparent;border:1px solid var(--bd2);
+         border-radius:var(--r);color:var(--tx3);font-family:var(--mono);
+         font-size:12px;cursor:pointer;margin-left:auto;transition:all .14s}
+.btn-rst:hover{color:var(--tx2)}
+.fb{margin-top:9px;border-radius:var(--r);padding:11px 13px;font-size:12px;
+    line-height:1.65;display:none;animation:fi .18s ease}
+.fb.on{display:block}
+.fb.ok{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.22);color:#7ee787}
+.fb.er{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.22);color:#ff9ea0}
+.fb.tip{background:rgba(227,179,65,.06);border:1px solid rgba(227,179,65,.18);color:var(--ye)}
+.fb code{background:rgba(255,255,255,.07);color:inherit;font-size:12px}
+.mc-opts{display:flex;flex-direction:column;gap:5px;padding:7px 0}
+.mc-o{padding:8px 13px;background:var(--bg3);border:1px solid var(--bd);
+      border-radius:var(--r);cursor:pointer;font-family:var(--mono);font-size:13px;
+      color:var(--tx2);transition:all .13s;text-align:left;display:flex;gap:9px;align-items:flex-start}
+.mc-o:hover:not(:disabled){border-color:var(--ac);color:var(--tx);background:var(--bg4)}
+.mc-o.ok{border-color:var(--gr);color:var(--gr);background:rgba(63,185,80,.05)}
+.mc-o.ng{border-color:var(--re);color:var(--re);background:rgba(248,81,73,.05)}
+.mc-o:disabled{cursor:default}
+.mc-k{background:var(--bg4);border-radius:3px;padding:0 5px;font-size:10px;
+      color:var(--tx3);flex-shrink:0;min-width:20px;text-align:center;margin-top:1px}
+.nav-btns{display:flex;justify-content:space-between;margin-top:36px;
+          padding-top:22px;border-top:1px solid var(--bd)}
+.btn-nav{padding:8px 16px;background:var(--bg3);border:1px solid var(--bd2);
+         border-radius:var(--r);color:var(--tx2);font-family:var(--mono);
+         font-size:12px;cursor:pointer;transition:all .14s;display:flex;
+         align-items:center;gap:7px}
+.btn-nav:hover{border-color:var(--ac);color:var(--ac2)}
+.btn-nav:disabled{opacity:.28;cursor:not-allowed}
+#mbt{display:none;position:fixed;top:14px;left:14px;z-index:200;
+     background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r);
+     width:34px;height:34px;align-items:center;justify-content:center;
+     cursor:pointer;font-size:16px;color:var(--tx2)}
 @media(max-width:768px){
-  #sb{transform:translateX(-100%);transition:transform .3s}
-  #sb.open{transform:translateX(0)}
+  #sb{transform:translateX(-100%)}
+  #sb.op{transform:translateX(0)}
   #main{margin-left:0}
   #mbt{display:flex}
-  .page{padding:60px 20px 60px}
+  .pg{padding:56px 18px 60px}
 }
+
 </style>
 </head>
 <body>
-<button id="mbt" onclick="document.getElementById('sb').classList.toggle('open')">☰</button>
+<button id="mbt" onclick="document.getElementById('sb').classList.toggle('op')">☰</button>
 <nav id="sb">
-  <div class="sb-hd">
-    <div class="sb-logo"><div class="sb-logo-i">λ</div>Linux & OS</div>
-    <div class="sb-prog">
-      <div class="sb-ptxt" id="ptxt">0 / 13 fejezet · 0 megoldva</div>
-      <div class="sb-pbar"><div class="sb-pfill" id="pfill"></div></div>
+  <div class="sb-top">
+    <div class="sb-brand">
+      <div class="sb-icon">λ</div>
+      <span class="sb-title">Linux & OS</span>
     </div>
+    <div class="pb-txt" id="pbt">0% · 0 feladat megoldva</div>
+    <div class="pb"><div class="pb-fill" id="pbf"></div></div>
   </div>
   <div class="sb-nav" id="nav"></div>
 </nav>
 <main id="main"></main>
 <script>
-// ══════════════════════════════════════════════════════
-//  ADATOK – 13 fejezet
-//  checkFn lehetséges értékek:
-//   exact   – progress[expected] tartalmazza a választ
-//   any     – progress[expected] bármelyikére illeszt
-//   regex   – testCases.match / nomatch alapján
-//   multi   – multiple choice
-//   code    – patterns: [[re1,re2,...], [re3,...], ...]
-//             minden belső tömb OR, a külső tömbök AND
-// ══════════════════════════════════════════════════════
-const T=[
-{id:1,title:"OS alapjai",sub:"Kernel, shell, Linux felépítése, CLI gondolkodás",
-theory:`<h4>Mi az operációs rendszer?</h4>
-<p>Az operációs rendszer közvetít a hardver és az alkalmazások között. Kezeli a memóriát, a processzort, a fájlrendszert és az I/O eszközöket.</p>
-<div class="ib"><span class="ii">💡</span><div class="it"><strong>Analógia:</strong> az OS mint egy étterem menedzsere – te (az alkalmazás) csak a pincérnek (API) szólsz, ő szervezi a konyhát (hardver).</div></div>
-<h4>A Linux rétegei</h4>
-<div class="cb"><pre><span class="a">Felhasználói tér</span>  │ bash, python, vim, Firefox...
-─────────────────┼──────────────────────────────
-<span class="c">Shell / libc</span>     │ rendszerhívások burkolata
-─────────────────┼──────────────────────────────
-<span class="g">Kernel</span>           │ ütemező, memóriakezelés, driverek
-─────────────────┼──────────────────────────────
-<span class="y">Hardver</span>          │ CPU, RAM, HDD, NIC...</pre></div>
-<h4>Kernel vs Shell</h4>
-<ul>
-<li><strong>Kernel:</strong> a Linux magja. Közvetlenül kezeli a hardvert. Ring 0 (privilegizált mód).</li>
-<li><strong>Shell:</strong> parancsértelmező. Kernellel rendszerhívásokon keresztül kommunikál. Típusok: <code>bash</code>, <code>zsh</code>, <code>sh</code>, <code>fish</code>.</li>
-</ul>
-<h4>CLI gondolkodás: kis parancsok + pipe</h4>
-<p>Unix-filozófia: minden program egyetlen dolgot csináljon jól, szöveget vegyen be és adjon ki. A <code>|</code> pipe összeköti őket.</p>
-<div class="cb"><pre><span class="d"># Ki van bejelentkezve és hányan?</span>
-<span class="c">who</span> | <span class="g">wc -l</span>
-
-<span class="d"># Legtöbbet használt 5 parancs</span>
-<span class="c">history</span> | <span class="g">awk '{print $2}'</span> | <span class="y">sort</span> | <span class="a">uniq -c</span> | <span class="o">sort -rn</span> | <span class="r">head -5</span></pre></div>
-<div class="wb"><span class="ii">⚠</span><div class="it"><strong>Fontos:</strong> Linux <strong>case-sensitive</strong> – a <code>Fajl.txt</code> és <code>fajl.txt</code> két különböző fájl.</div></div>`,
-exercises:[
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mi a Linux kernel feladata?",
-opts:["Szöveges parancsokat értelmez és futtat","Közvetlenül kezeli a hardvert és az erőforrásokat","Weboldalakat jelenít meg","A bash shell másik neve"],
-correct:1,exp:"A kernel (mag) a hardverrel kommunikál, kezeli a memóriát, CPU ütemezést, drivereket. A shell (bash stb.) felette fut."},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Melyik állítás igaz a CLI gondolkodásra?",
-opts:["Egy nagy program mindent tud csinálni","Minden programnak GUI-ja kell","Kis programok kimenetét | összeköti a következő bemenetével","A pipe csak bash-ben működik"],
-correct:2,exp:"Unix-filozófia: sok kis program, mindegyik egy dolgot csinál jól. A | összeköti: egyik kimenet a másik bemenete."},
-{type:"exact",typeLabel:"PARANCS",q:"Írd meg a parancsot, amely kiírja az aktuálisan futó shell teljes elérési útját (a $SHELL változó értékét)!",
-hint:"Változók értékét az echo paranccsal lehet kiírni, a változó neve elé $ kell.",
-placeholder:"echo ...",
-expected:["echo $SHELL","echo ${SHELL}"],
-okMsg:"Tökéletes! Az echo kiírja a $SHELL változó értékét, ami pl. /bin/bash.",
-errMsg:"Próbáld újra. Az echo parancs után $ jellel kell hivatkozni a változóra: echo $SHELL"}
-]},
-
-{id:2,title:"Shell parancsok",sub:"Alapparancsok, formátum, man, whatis, útvonalak",
-theory:`<h4>Parancsok formátuma</h4>
-<div class="cb"><pre><span class="c">parancsnév</span> <span class="y">[opciók]</span> <span class="g">[argumentumok]</span>
-
-<span class="c">ls</span> <span class="y">-la</span> <span class="g">/home/user</span>
-<span class="c">cp</span> <span class="y">-r</span> <span class="g">forras/ cel/</span>
-<span class="c">chmod</span> <span class="y">u+x</span> <span class="g">script.sh</span></pre></div>
-<h4>Nélkülözhetetlen parancsok</h4>
-<div class="cb"><pre><span class="c">ls</span> <span class="y">-la</span>            <span class="d"># listázás részletesen + rejtett fájlok</span>
-<span class="c">cd</span> <span class="g">/var/log</span>       <span class="d"># könyvtárváltás</span>
-<span class="c">pwd</span>              <span class="d"># aktuális könyvtár kiírása</span>
-<span class="c">cp</span> <span class="y">-r</span> <span class="g">src/ dst/</span>  <span class="d"># rekurzív másolás</span>
-<span class="c">mv</span> <span class="g">old new</span>       <span class="d"># átnevezés / mozgatás</span>
-<span class="c">rm</span> <span class="y">-rf</span> <span class="g">dir/</span>      <span class="d"># ⚠ rekurzív törlés!</span>
-<span class="c">mkdir</span> <span class="y">-p</span> <span class="g">a/b/c</span>  <span class="d"># könyvtárlánc létrehozása</span>
-<span class="c">touch</span> <span class="g">file.txt</span>   <span class="d"># üres fájl létrehozása</span>
-<span class="c">cat</span> <span class="g">file.txt</span>     <span class="d"># fájl tartalmának kiírása</span>
-<span class="c">less</span> <span class="g">file.txt</span>    <span class="d"># lapozható megjelenítés (q = kilép)</span></pre></div>
-<h4>Segítség kérése</h4>
-<div class="cb"><pre><span class="c">man</span> <span class="g">ls</span>           <span class="d"># teljes kézikönyv (q = kilép)</span>
-<span class="c">whatis</span> <span class="g">grep</span>     <span class="d"># egy soros leírás</span>
-<span class="c">apropos</span> <span class="g">copy</span>    <span class="d"># parancsok keresése kulcsszó alapján</span>
-<span class="c">ls</span> <span class="y">--help</span>       <span class="d"># rövid súgó</span></pre></div>
-<h4>Útvonalak</h4>
-<div class="cb"><pre><span class="g">/</span>          <span class="d"># gyökér (root directory)</span>
-<span class="g">~</span>          <span class="d"># home könyvtár ($HOME)</span>
-<span class="g">.</span>          <span class="d"># aktuális könyvtár</span>
-<span class="g">..</span>         <span class="d"># szülő könyvtár</span>
-
-<span class="d"># Abszolút út (/-el kezdődik):</span>
-<span class="g">/home/user/projekt/main.c</span>
-
-<span class="d"># Relatív út (aktuális könyvtártól):</span>
-<span class="g">projekt/main.c</span></pre></div>`,
-exercises:[
-{type:"any",typeLabel:"PARANCS",q:"Listázd ki az aktuális könyvtár összes fájlját (rejtettekkel együtt), részletes formátumban!",
-hint:"Az ls -l opciója részletes (long) listát, -a a rejtetteket is mutatja. Kombinálhatók: -la",
-placeholder:"ls ...",
-expected:["ls -la","ls -al","ls -l -a","ls -a -l"],
-okMsg:"Helyes! Az -l és -a opciók kombinációja megmutatja az összes fájlt részletesen.",
-errMsg:"Használd az ls parancsot -l (long) és -a (all) opciókkal kombinálva."},
-{type:"any",typeLabel:"PARANCS",q:"Hozz létre egyszerre egy teljes könyvtár-láncot: projekt/src/utils (ha a közbülső könyvtárak nem léteznek)!",
-hint:"A mkdir -p opciója létrehozza a hiányzó szülőkönyvtárakat is.",
-placeholder:"mkdir ...",
-expected:["mkdir -p projekt/src/utils"],
-okMsg:"Tökéletes! A -p flag (parents) automatikusan létrehozza az összes hiányzó közbülső könyvtárat.",
-errMsg:"Szükséges a -p flag a mkdir paranccsal, hogy a közbülső könyvtárakat is létrehozza."},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mit csinál az apropos copy parancs?",
-opts:["Lemásolja a copy nevű fájlt","Megnyitja a copy parancs man oldalát","Kilistázza az összes parancsot, amelynek leírásában szerepel a 'copy' szó","Megmutatja, hol van a copy program"],
-correct:2,exp:"Az apropos kulcsszó alapján keres a man oldalak rövid leírásaiban – ha nem tudod pontosan a parancs nevét."}
-]},
-
-{id:3,title:"Metakarakterek & átirányítás",sub:">, >>, <, |, 2>, 2>&1, *, ?, [], idézőjelek",
-theory:`<h4>Átirányítás</h4>
-<div class="cb"><pre><span class="c">parancs</span> <span class="y">></span>  <span class="g">fajl</span>    <span class="d"># stdout → fájl (felülír)</span>
-<span class="c">parancs</span> <span class="y">>></span> <span class="g">fajl</span>    <span class="d"># stdout → fájl (hozzáfűz)</span>
-<span class="c">parancs</span> <span class="y"><</span>  <span class="g">fajl</span>    <span class="d"># stdin ← fájl</span>
-<span class="c">parancs</span> <span class="y">2></span> <span class="g">fajl</span>    <span class="d"># stderr → fájl</span>
-<span class="c">parancs</span> <span class="y">2>&1</span>        <span class="d"># stderr → ugyanoda, mint stdout</span>
-<span class="c">parancs</span> <span class="y">>/dev/null 2>&1</span>  <span class="d"># minden kimenet eldobása</span></pre></div>
-<h4>Pipeline (|)</h4>
-<div class="cb"><pre><span class="d"># Az első parancs stdout-ja → második stdin-je</span>
-<span class="c">ls -la</span> | <span class="g">grep ".txt"</span> | <span class="y">wc -l</span></pre></div>
-<h4>Globbing (fájlnév helyettesítők)</h4>
-<div class="cb"><pre><span class="y">*</span>      <span class="d"># 0 vagy több tetszőleges karakter</span>
-<span class="y">?</span>      <span class="d"># pontosan 1 tetszőleges karakter</span>
-<span class="y">[abc]</span>  <span class="d"># a, b, vagy c közül egy</span>
-<span class="y">[a-z]</span>  <span class="d"># kisbetű</span>
-<span class="y">[!0-9]</span> <span class="d"># NEM számjegy</span>
-
-<span class="c">ls</span> <span class="y">*.c</span>          <span class="d"># minden .c fájl</span>
-<span class="c">rm</span> <span class="y">temp?.txt</span>    <span class="d"># temp1.txt, tempa.txt, stb.</span></pre></div>
-<h4>Idézőjelek</h4>
-<div class="cb"><pre><span class="y">'szöveg'</span>  <span class="d"># betű szerint – semmi sem értelmez</span>
-<span class="y">"szöveg"</span>  <span class="d"># értelmezi: $var, $(cmd), \</span>
-
-name=vilag
-echo <span class="g">'Hello $name'</span>  <span class="d"># → Hello $name</span>
-echo <span class="g">"Hello $name"</span>  <span class="d"># → Hello vilag</span></pre></div>
-<div class="wb"><span class="ii">⚠</span><div class="it"><strong>Globbing ≠ Regex!</strong> A <code>*</code> a shellben = "bármi", regex-ben = "az előző 0 vagy többször".</div></div>`,
-exercises:[
-{type:"any",typeLabel:"PARANCS",q:"Futtasd az ls parancsot és mentsd a kimenetét a lista.txt fájlba (ha létezik, írja felül)!",
-hint:"A > operátor felülírva írja a kimenetet fájlba.",
-placeholder:"ls ...",
-expected:["ls > lista.txt","ls>lista.txt","ls -la > lista.txt","ls -l > lista.txt"],
-okMsg:"Helyes! A > átirányítja az stdout-ot fájlba (felülírva).",
-errMsg:"Használj > átirányítást: ls > lista.txt"},
-{type:"any",typeLabel:"PARANCS",q:"Futtasd a find / -name passwd parancsot, de a hibaüzeneteket küldd /dev/null-ba!",
-hint:"A stderr fájlleíró száma 2. A /dev/null minden beleírt adatot elnyel.",
-placeholder:"find / -name passwd ...",
-expected:["find / -name passwd 2>/dev/null","find / -name passwd 2> /dev/null"],
-okMsg:"Tökéletes! A 2>/dev/null a hibaüzeneteket (stderr, fd 2) elnyeli.",
-errMsg:"Szükséges a 2>/dev/null az stderr elnyomásához: find / -name passwd 2>/dev/null"},
-{type:"any",typeLabel:"PARANCS",q:"Listázd ki csak a .sh kiterjesztésű fájlokat az aktuális könyvtárban!",
-hint:"A * globbing karakter bármennyi karaktert helyettesít.",
-placeholder:"ls ...",
-expected:["ls *.sh","ls -l *.sh","ls -la *.sh"],
-okMsg:"Helyes! A *.sh globbing minta minden .sh-ra végződő fájlnevet megfogja.",
-errMsg:"Használj globbing mintát: ls *.sh"},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mit csinál a 2>&1 átirányítás?",
-opts:["A stdin-t irányítja a stdout-ra","A stderr-t (2) irányítja ugyanoda, ahová a stdout (1) megy","Megduplázza a kimeneti fájlleírót","Bezárja a stderr-t"],
-correct:1,exp:"2>&1: a 2-es (stderr) menjen ugyanoda, ahová az 1-es (stdout) van irányítva. Tipikus: cmd > fajl 2>&1 – minden kimenet fájlba."}
-]},
-
-{id:4,title:"Reguláris kifejezések",sub:"^, $, ., *, +, [], {m,n}, csoportosítás, alap vs ERE",
-theory:`<h4>Alapszabályok</h4>
-<div class="cb"><pre><span class="y">.</span>     <span class="d"># bármely karakter (nem újsor)</span>
-<span class="y">^</span>     <span class="d"># sor eleje</span>
-<span class="y">$</span>     <span class="d"># sor vége</span>
-<span class="y">\\c</span>    <span class="d"># c karakter (pl. \\. = pont)</span>
-<span class="g">^$</span>   <span class="d"># üres sor</span>
-<span class="g">^ *$</span> <span class="d"># csak szóközöket tartalmazó sor</span></pre></div>
-<h4>Kvantorök</h4>
-<div class="cb"><pre><span class="y">e*</span>     <span class="d"># 0 vagy többször (alap és ERE)</span>
-<span class="y">e+</span>     <span class="d"># 1 vagy többször (csak ERE)</span>
-<span class="y">e?</span>     <span class="d"># 0 vagy 1-szer   (csak ERE)</span>
-<span class="y">e{m,n}</span><span class="d"># legalább m, legfeljebb n (ERE)</span>
-<span class="y">e{3}</span>   <span class="d"># pontosan 3-szor</span></pre></div>
-<h4>Karakterosztályok</h4>
-<div class="cb"><pre><span class="y">[abc]</span>    <span class="d"># a, b vagy c</span>
-<span class="y">[a-z]</span>    <span class="d"># kisbetű</span>
-<span class="y">[0-9]</span>    <span class="d"># számjegy</span>
-<span class="y">[^0-9]</span>   <span class="d"># NEM számjegy</span>
-<span class="y">[:digit:]</span><span class="d"># = [0-9]  (nevesített, [[ ]] belsejében)</span>
-<span class="y">[:alpha:]</span><span class="d"># betű</span>
-<span class="y">[:alnum:]</span><span class="d"># betű vagy szám</span></pre></div>
-<h4>Csoportosítás</h4>
-<div class="cb"><pre><span class="d"># Alap regex:</span>
-<span class="g">\\(ab\\)*</span>  <span class="d"># "ab" 0 vagy többször</span>
-<span class="d"># Kiterjesztett (ERE, grep -E):</span>
-<span class="g">(ab)*</span>   <span class="d"># "ab" 0 vagy többször</span>
-<span class="g">cat|dog</span> <span class="d"># "cat" vagy "dog"</span>
-<span class="d"># Visszahivatkozás \\1:</span>
-<span class="g">^(.).*\\1$</span> <span class="d"># ugyanolyan karakterrel kezdődik és végződik</span></pre></div>`,
-exercises:[
-{type:"any",typeLabel:"PARANCS",q:"Írj grep parancsot, amely egy fajl.txt-ből kilistázza az összes olyan sort, amely számjeggyel kezdődik!",
-hint:"A ^ a sor elejére illeszt, a [0-9] számjegyre illeszt.",
-placeholder:"grep ...",
-expected:["grep '^[0-9]' fajl.txt","grep \"^[0-9]\" fajl.txt","grep -E '^[0-9]' fajl.txt","grep '^[0-9]' fajl.txt","grep '^[[:digit:]]' fajl.txt"],
-okMsg:"Helyes! A ^[0-9] minta: ^ = sor eleje, [0-9] = számjegy.",
-errMsg:"Szükséges a ^ horgony és [0-9] karakterosztály: grep '^[0-9]' fajl.txt"},
-{type:"regex",typeLabel:"REGEX FELADAT",q:"Írj kiterjesztett reguláris kifejezést (ERE), amely pontosan egy 5 jegyű számra illeszt (csak számjegyek, semmi más)!",
-hint:"A ^ és $ horgonyok kellenek. A {5} kvantor pontosan 5 előfordulást jelent.",
-placeholder:"^...$",
-testCases:{match:["12345","00000","99999"],nomatch:["1234","123456","1234a","abcde",""]}},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mit illeszt a ^[^0-9]*$ reguláris kifejezés?",
-opts:["Csak számjegyekből álló sort","Üres sort","Olyan sort, amely egyáltalán nem tartalmaz számjegyet","Pontosan egy számjegyet tartalmazó sort"],
-correct:2,exp:"^ = sor eleje, [^0-9] = nem számjegy, * = 0 vagy többször, $ = sor vége. Tehát: csak nem-számjegy karakterekből áll (üres sor is illik)."}
-]},
-
-{id:5,title:"grep, sed, awk",sub:"Szövegfeldolgozás parancssorból – keresés, csere, mezők",
-theory:`<h4>grep – szövegkeresés</h4>
-<div class="cb"><pre><span class="c">grep</span> <span class="y">'minta'</span> <span class="g">fajl</span>      <span class="d"># minta előfordulásai</span>
-<span class="c">grep</span> <span class="y">-v</span> <span class="g">'minta'</span>      <span class="d"># NEM egyező sorok</span>
-<span class="c">grep</span> <span class="y">-n</span> <span class="g">'minta'</span>      <span class="d"># sorszámmal</span>
-<span class="c">grep</span> <span class="y">-c</span> <span class="g">'minta'</span>      <span class="d"># csak a találatok száma</span>
-<span class="c">grep</span> <span class="y">-i</span> <span class="g">'minta'</span>      <span class="d"># case-insensitive</span>
-<span class="c">grep</span> <span class="y">-E</span> <span class="g">'regex'</span>      <span class="d"># kiterjesztett regex (egrep)</span>
-<span class="c">grep</span> <span class="y">-r</span> <span class="g">'minta' dir/</span><span class="d"># rekurzív</span></pre></div>
-<h4>sed – folyam-szerkesztő</h4>
-<div class="cb"><pre><span class="c">sed</span> <span class="y">'s/régi/új/'</span>    <span class="d"># első előfordulás cseréje soronként</span>
-<span class="c">sed</span> <span class="y">'s/régi/új/g'</span>   <span class="d"># összes előfordulás (global)</span>
-<span class="c">sed</span> <span class="y">'/minta/d'</span>      <span class="d"># minta sorainak törlése</span>
-<span class="c">sed</span> <span class="y">-n '3,7p'</span>       <span class="d"># 3-7. sorok kiírása</span>
-<span class="c">sed</span> <span class="y">-i 's/foo/bar/g'</span> <span class="g">f</span> <span class="d"># in-place (fájl módosítás!)</span></pre></div>
-<h4>awk – mezőfeldolgozás</h4>
-<div class="cb"><pre><span class="c">awk</span> <span class="y">'{print $1}'</span>         <span class="d"># első mező</span>
-<span class="c">awk</span> <span class="y">'{print $NF}'</span>        <span class="d"># utolsó mező</span>
-<span class="c">awk</span> <span class="y">-F: '{print $1}'</span>    <span class="d"># : elválasztóval</span>
-<span class="c">awk</span> <span class="y">'/minta/{print $2}'</span> <span class="d"># mintára illeszkedő sorokban 2. mező</span>
-<span class="c">awk</span> <span class="y">'{s+=$1} END{print s}'</span> <span class="d"># első mező összege</span></pre></div>`,
-exercises:[
-{type:"any",typeLabel:"PARANCS",q:"A /etc/passwd fájlból listázd ki az összes olyan sort, amely tartalmazza a 'bash' szöveget!",
-hint:"grep alapszintaxis: grep 'minta' fajl",
-placeholder:"grep ...",
-expected:["grep 'bash' /etc/passwd","grep \"bash\" /etc/passwd","grep bash /etc/passwd"],
-okMsg:"Helyes! A grep megkeresi a 'bash' mintát az /etc/passwd összes sorában.",
-errMsg:"Helyes szintaxis: grep 'bash' /etc/passwd"},
-{type:"any",typeLabel:"PARANCS",q:"Cseréld ki az összes 'foo' szöveget 'bar'-ra egy fajl.txt-ben (csak írd ki az eredményt, ne módosítsd a fájlt)!",
-hint:"A sed 's/minta/csere/g' formátumú. A g flag = global. Az -i flag módosítaná a fájlt – az nélkül csak kiírja.",
-placeholder:"sed ...",
-expected:["sed 's/foo/bar/g' fajl.txt","sed \"s/foo/bar/g\" fajl.txt"],
-okMsg:"Tökéletes! Az s/foo/bar/g: s = substitute, g = global (minden előfordulás).",
-errMsg:"Helyes szintaxis: sed 's/foo/bar/g' fajl.txt"},
-{type:"any",typeLabel:"PARANCS",q:"Írd ki az /etc/passwd fájlból csak a felhasználóneveket (az első mező, elválasztó a kettőspont)!",
-hint:"Az awk -F: beállítja az elválasztót, a $1 az első mezőre hivatkozik.",
-placeholder:"awk ...",
-expected:["awk -F: '{print $1}' /etc/passwd","awk -F':' '{print $1}' /etc/passwd"],
-okMsg:"Helyes! Az -F: a field separator, $1 az első mező (felhasználónév).",
-errMsg:"Helyes szintaxis: awk -F: '{print $1}' /etc/passwd"}
-]},
-
-{id:6,title:"Shell programozás",sub:"#!/bin/bash, változók, if, for, while, case, test, aritmetika",
-theory:`<h4>Script szerkezete</h4>
-<div class="cb"><pre><span class="y">#!/bin/bash</span>         <span class="d"># shebang – ez értelmezi a scriptet</span>
-
-nev=<span class="g">"Vilmos"</span>         <span class="d"># nincs szóköz az = körül!</span>
-szam=<span class="g">42</span>
-echo <span class="g">"Szia, $nev! Szám: ${szam}."</span>
-
-<span class="a">$0</span>  <span class="d"># script neve</span>
-<span class="a">$1</span>, <span class="a">$2</span>...  <span class="d"># argumentumok</span>
-<span class="a">$#</span>  <span class="d"># argumentumok száma</span>
-<span class="a">$?</span>  <span class="d"># utolsó parancs visszatérési értéke</span>
-<span class="a">$$</span>  <span class="d"># script PID-je</span></pre></div>
-<h4>Feltételes szerkezetek</h4>
-<div class="cb"><pre>if [[ <span class="a">$1</span> <span class="y">-gt</span> 10 ]]; then
-  echo "nagy"
-elif [[ <span class="a">$1</span> <span class="y">-eq</span> 10 ]]; then
-  echo "tíz"
-else
-  echo "kis"
-fi
-
-if [[ <span class="y">-f</span> <span class="a">$1</span> ]]; then echo "fájl létezik"; fi
-if [[ <span class="y">-z</span> <span class="a">"$var"</span> ]]; then echo "üres string"; fi</pre></div>
-<h4>Ciklusok</h4>
-<div class="cb"><pre>for gyumolcs in alma korte szilva; do
-  echo <span class="g">"$gyumolcs"</span>
-done
-
-for ((i=1; i<=10; i++)); do echo <span class="g">$i</span>; done
-
-counter=0
-while [[ <span class="a">$counter</span> <span class="y">-lt</span> 5 ]]; do
-  echo <span class="g">$counter</span>; <span class="c">((counter++))</span>
-done</pre></div>
-<h4>Aritmetika és összehasonlítás</h4>
-<div class="cb"><pre><span class="c">((</span> x = 5 + 3 <span class="c">))</span>       <span class="d"># x = 8</span>
-result=<span class="g">$(( 10 * 4 ))</span>  <span class="d"># result = 40</span>
-
-<span class="y">-eq</span> <span class="d">egyenlő</span>   <span class="y">-ne</span> <span class="d">nem egyenlő</span>
-<span class="y">-lt</span> <span class="d">kisebb</span>    <span class="y">-le</span> <span class="d">kisebb vagy egyenlő</span>
-<span class="y">-gt</span> <span class="d">nagyobb</span>   <span class="y">-ge</span> <span class="d">nagyobb vagy egyenlő</span></pre></div>`,
-exercises:[
-{type:"code",typeLabel:"BASH KÓD",lang:"shell",
-q:"Írj bash scriptet, amely ellenőrzi az első argumentumot: ha üres, írja ki a 'Hiba: adj meg egy nevet!' üzenetet és lépjen ki 1-es kóddal!",
-hint:"A -z feltétel üres stringre igaz. Az exit N parancs N kóddal lép ki.",
-placeholder:"#!/bin/bash\n",
-patterns:[
-  [/\[\[.*-z.*\$1.*\]\]|\[\[.*\$#.*-eq.*0.*\]\]|\[.*-z.*\$1.*\]|\[\[.*\$1.*==.*""\]\]/],
-  [/exit\s+1/],
-  [/echo/]
-],
-hints:["Hiányzik az üres argumentum ellenőrzése: if [[ -z \"$1\" ]] then ...","Hiányzik az exit 1 a hibás ágban","Hiányzik az echo a hibaüzenethez"],
-okMsg:"Helyes! A -z feltétel üres stringre igaz, az exit 1 jelzi a hibát a hívónak."},
-{type:"code",typeLabel:"BASH KÓD",lang:"shell",
-q:"Írj bash scriptet, amely az 1-től 10-ig terjedő páros számokat írja ki, minden számot külön sorba!",
-hint:"for ciklus seq 2 2 10-zel, vagy for ((i=2; i<=10; i+=2)) szerkezettel.",
-placeholder:"#!/bin/bash\n",
-patterns:[
-  [/for\s/, /while\s/],
-  [/echo/],
-  [/seq\s+2\s+2|i\+=2|i=i\+2|\(\(.*i.*\+.*2\)\)/]
-],
-hints:["Hiányzik a ciklus (for vagy while)","Hiányzik az echo a kiíráshoz","A lépésköznek 2-nek kell lennie (csak a párosa kat)"],
-okMsg:"Tökéletes! A páros számok kiírása for ciklussal és 2-es lépésközzel."},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mi a különbség a [ ] és a [[ ]] feltétel között?",
-opts:["Semmi, teljesen egyenértékűek","[[ ]] csak egész számokra működik","[[ ]] bash-specifikus: támogatja =~ regex illesztést, < > stringre, és nem kell levédeni a metakaraktereket","[ ] a modernebb, [[ ]] a régebbi szintaxis"],
-correct:2,exp:"A [[ ]] bash-beépített feltétel-kiértékelő: kezeli a =~ regex-et, < > string sorrendezést, és nem kell aggódni a szóközös változóknál sem."}
-]},
-
-{id:7,title:"Állományrendszer",sub:"inode, jogosultságok, chmod, hard/soft link, rendszerkönyvtárak",
-theory:`<h4>Az inode</h4>
-<p>Minden fájlnak van egy <strong>inode</strong> bejegyzése – tartalmazza a metaadatokat: méretet, jogosultságokat, tulajdonost, módosítási időt és a lemezblokkok címeit. A fájlnév csak egy könyvtárbejegyzés, amely az inode számra mutat.</p>
-<h4>Jogosultságok</h4>
-<div class="cb"><pre><span class="d">ls -l kimenete:</span>
-<span class="g">-rwxr-xr--</span> 1 user group 1234 jan 1 file.sh
- <span class="a">uuu</span><span class="c">ggg</span><span class="y">ooo</span>  <span class="d">(user / group / others)</span>
-<span class="d">r=olvasás(4), w=írás(2), x=végrehajtás(1)</span></pre></div>
-<h4>chmod</h4>
-<div class="cb"><pre><span class="c">chmod</span> <span class="y">755</span> <span class="g">script.sh</span>  <span class="d"># rwxr-xr-x</span>
-<span class="c">chmod</span> <span class="y">644</span> <span class="g">file.txt</span>   <span class="d"># rw-r--r--</span>
-<span class="c">chmod</span> <span class="y">u+x</span> <span class="g">file</span>       <span class="d"># user: végrehajtás hozzáadása</span>
-<span class="c">chmod</span> <span class="y">go-w</span> <span class="g">file</span>      <span class="d"># group és others: írás elvétele</span></pre></div>
-<h4>Hard link vs Symlink</h4>
-<div class="cb"><pre><span class="c">ln</span> <span class="g">eredeti.txt link.txt</span>    <span class="d"># hard link – azonos inode</span>
-<span class="c">ln</span> <span class="y">-s</span> <span class="g">eredeti.txt link.txt</span> <span class="d"># symlink – mutatóra mutat</span></pre></div>
-<div class="ib"><span class="ii">💡</span><div class="it"><strong>Hard link:</strong> törölheted az eredetit, az adat megmarad (linknám > 0). <strong>Symlink:</strong> ha az eredeti törlődik, a symlink érvénytelen lesz.</div></div>
-<h4>Fontos könyvtárak</h4>
-<div class="cb"><pre><span class="g">/bin</span>   <span class="d"># alapvető programok (ls, cp, bash...)</span>
-<span class="g">/etc</span>   <span class="d"># konfigurációs fájlok</span>
-<span class="g">/home</span>  <span class="d"># felhasználók home könyvtárai</span>
-<span class="g">/tmp</span>   <span class="d"># ideiglenes fájlok</span>
-<span class="g">/var</span>   <span class="d"># változó adatok (log-ok, mail)</span>
-<span class="g">/proc</span>  <span class="d"># kernel és folyamat info (virtuális!)</span>
-<span class="g">/dev</span>   <span class="d"># eszközfájlok (sda, tty, null...)</span>
-<span class="g">/usr</span>   <span class="d"># felhasználói programok és lib-ek</span></pre></div>`,
-exercises:[
-{type:"any",typeLabel:"PARANCS",q:"Állítsd be a script.sh jogosultságait: a tulajdonos olvashat, írhat, futtathat; mások csak olvashatnak!",
-hint:"744 oktálisan: user=rwx(7), group=r--(4), others=r--(4)",
-placeholder:"chmod ...",
-expected:["chmod 744 script.sh","chmod u=rwx,go=r script.sh","chmod u=rwx,g=r,o=r script.sh"],
-okMsg:"Tökéletes! 744 = owner:rwx(7), group:r--(4), others:r--(4).",
-errMsg:"Helyes szintaxis: chmod 744 script.sh (7=rwx, 4=r--)"},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mi a különbség a hard link és a symbolic (soft) link között?",
-opts:["Csak a nevük különbözik","Hard link: azonos inode, törölheted az eredetit és az adat megmarad. Symlink: mutató, az eredeti törlése után érvénytelen","Symlink azonos inode-ot oszt","Hard link csak könyvtárakra alkalmazható"],
-correct:1,exp:"Hard link: az inode link-számlálója növekszik; az adat addig él, amíg van legalább egy hivatkozás. Symlink: csak az elérési utat tárolja."},
-{type:"any",typeLabel:"PARANCS",q:"Hozz létre szimbolikus linket: ~/shortcuts/docs mutasson a ~/Documents könyvtárra!",
-hint:"ln -s FORRÁS LINK szintaxis: a forrás ~/Documents, a link neve ~/shortcuts/docs.",
-placeholder:"ln ...",
-expected:["ln -s ~/Documents ~/shortcuts/docs","ln -s $HOME/Documents $HOME/shortcuts/docs","ln -s ~/Documents/ ~/shortcuts/docs"],
-okMsg:"Helyes! Az -s flag symlinket hoz létre az eredeti fájlra/könyvtárra mutató mutatóval.",
-errMsg:"Helyes szintaxis: ln -s ~/Documents ~/shortcuts/docs"}
-]},
-
-{id:8,title:"Folyamatok alapjai",sub:"Program vs folyamat, PID/PPID, állapotok, task_struct, zombie",
-theory:`<h4>Program vs Folyamat</h4>
-<p>A <strong>program</strong> egy lemezen lévő végrehajtható fájl (statikus). A <strong>folyamat</strong> egy futó program példánya (dinamikus) – saját memóriaterülettel, fájlleírókkal, PID-del.</p>
-<h4>task_struct</h4>
-<p>A Linux kernel minden folyamatot egy <code>task_struct</code> C struktúrában tart nyilván. Tartalmazza: PID, PPID, állapot, memória leíró, fájlleíró tábla, signal maszk.</p>
-<h4>Folyamatállapotok</h4>
-<div class="cb"><pre><span class="g">Running (R)</span>  <span class="d"># fut vagy futásra kész</span>
-<span class="a">Sleep (S)</span>    <span class="d"># eseményre vár – megszakítható</span>
-<span class="a">Sleep (D)</span>    <span class="d"># megszakíthatatlan várakozás (I/O)</span>
-<span class="y">Stopped (T)</span> <span class="d"># SIGSTOP / Ctrl+Z</span>
-<span class="r">Zombie (Z)</span>  <span class="d"># befejezte, szülő még nem olvasta ki exit kódot</span></pre></div>
-<h4>Hasznos parancsok</h4>
-<div class="cb"><pre><span class="c">ps</span> <span class="y">aux</span>        <span class="d"># összes folyamat részletesen</span>
-<span class="c">ps</span> <span class="y">-ef</span>        <span class="d"># PPID is látható</span>
-<span class="c">top</span>           <span class="d"># élő folyamatfigyelő</span>
-<span class="c">kill</span> <span class="y">-9</span> <span class="g">PID</span>   <span class="d"># SIGKILL – azonnali leállítás</span>
-<span class="c">kill</span> <span class="y">-15</span> <span class="g">PID</span>  <span class="d"># SIGTERM – elegáns leállítás kérése</span>
-<span class="c">pgrep</span> <span class="g">bash</span>    <span class="d"># bash nevű folyamatok PID-jei</span></pre></div>`,
-exercises:[
-{type:"any",typeLabel:"PARANCS",q:"Listázd ki az összes futó folyamatot úgy, hogy a PID és a szülő PID (PPID) is látszódjon!",
-hint:"A ps -ef formátum tartalmazza a PPID-et is.",
-placeholder:"ps ...",
-expected:["ps -ef","ps ef","ps -e -f"],
-okMsg:"Helyes! A ps -ef standard Unix formátum: UID, PID, PPID, C, STIME, TTY, TIME, CMD.",
-errMsg:"Használj ps -ef parancsot: ez tartalmazza a PPID oszlopot is."},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mi az a zombie folyamat?",
-opts:["Végtelen ciklusban futó, 100%-os CPU-t használó folyamat","Befejezett folyamat, amelynek exit kódját a szülő még nem olvasta ki (wait())","Leállított folyamat (Ctrl+Z után)","Kernel folyamat, amely memória-szivárgást okoz"],
-correct:1,exp:"Zombie (Z állapot): már befejezett folyamat, de bejegyzése megmarad a folyamattáblában, mert a szülő még nem hívta a wait()-et. Nem fut, nem fogyaszt CPU-t."}
-]},
-
-{id:9,title:"Folyamatkezelés C-ben",sub:"fork(), getpid(), exit(), wait(), waitpid()",
-theory:`<h4>fork() – folyamat klónozása</h4>
-<div class="cb"><pre><span class="y">#include &lt;unistd.h&gt;</span>
-<span class="y">#include &lt;sys/wait.h&gt;</span>
-<span class="y">#include &lt;stdio.h&gt;</span>
-
-<span class="c">pid_t</span> pid = <span class="g">fork()</span>;
-
-if (pid <span class="r">&lt;</span> 0) {
-    <span class="a">perror</span>("fork hiba"); return 1;
-} else if (pid <span class="r">==</span> 0) {
-    <span class="d">/* GYEREK – fork() → 0 */</span>
-    printf("Gyerek PID: %d\n", <span class="a">getpid()</span>);
-    <span class="a">exit(0)</span>;
-} else {
-    <span class="d">/* SZÜLŐ – fork() → gyerek PID-je */</span>
-    printf("Szülő: %d, gyerek: %d\n", <span class="a">getpid()</span>, pid);
-    <span class="a">wait(NULL)</span>; <span class="d">// zombie elkerülése!</span>
-}</pre></div>
-<div class="ib"><span class="ii">💡</span><div class="it"><strong>fork() visszatérési értéke:</strong> szülőben = gyerek PID-je (&gt;0), gyerekben = 0, hiba esetén = -1.</div></div>
-<h4>exit() vs _exit()</h4>
-<div class="cb"><pre><span class="c">exit(0)</span>   <span class="d"># stdio buffereket kiüríti, atexit() hív</span>
-<span class="c">_exit(0)</span>  <span class="d"># azonnal vissza a kernelbe – fork() utáni gyerekben ajánlott</span></pre></div>
-<h4>waitpid()</h4>
-<div class="cb"><pre><span class="c">pid_t</span> ret = <span class="g">waitpid(pid, &status, 0)</span>; <span class="d"># adott gyerekre vár</span>
-if (<span class="a">WIFEXITED(status)</span>)
-    printf("exit kód: %d\n", <span class="a">WEXITSTATUS(status)</span>);</pre></div>`,
-exercises:[
-{type:"code",typeLabel:"C KÓD",lang:"text/x-csrc",
-q:"Írj C programot, amely fork()-kal létrehoz egy gyerekfolyamatot! A gyerek írja ki a saját PID-jét, a szülő várja meg a gyereket (wait), majd írja ki: 'Gyerek befejezte'!",
-hint:"fork() visszatérése: gyerekben 0, szülőben a gyerek PID-je. wait(NULL) megvárja bármelyik gyereket.",
-placeholder:"#include <stdio.h>\n#include <unistd.h>\n#include <sys/wait.h>\n\nint main() {\n    \n}",
-patterns:[
-  [/fork\s*\(\s*\)/],
-  [/pid\s*==\s*0|pid\s*<\s*1/],
-  [/getpid\s*\(\s*\)/],
-  [/wait\s*\(\s*(NULL|&|\w)/]
-],
-hints:["Hiányzik a fork() hívás","Hiányzik a pid==0 feltétel (gyerek ág)","Hiányzik a getpid() a PID kiírásához","Hiányzik a wait() a szülő ágban"],
-okMsg:"Tökéletes! fork()+wait() kombinációja megakadályozza a zombie folyamatot."},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mi a fork() visszatérési értéke a gyerekfolyamatban?",
-opts:["A szülő PID-je","A gyerek saját PID-je","0","-1"],
-correct:2,exp:"fork() visszatér: szülőben = gyerek PID-je (>0), gyerekben = 0, hiba esetén -1. Ezért: if (pid == 0) { /* gyerek */ } else { /* szülő */ }"}
-]},
-
-{id:10,title:"Pipe C-ben",sub:"pipe(), read(), write(), close() – szülő-gyerek kommunikáció",
-theory:`<h4>A pipe felépítése</h4>
-<div class="cb"><pre><span class="d">// pfd[0] = olvasóvég    pfd[1] = írásovég</span>
-<span class="a">SZÜLŐ ír → pfd[1]</span> ────→ <span class="g">pfd[0] → olvas GYEREK</span>
-
-<span class="c">int</span> pfd[2];
-<span class="g">pipe(pfd)</span>;  <span class="d">// létrehozza a két fájlleírót</span></pre></div>
-<h4>Szülő → Gyerek kommunikáció</h4>
-<div class="cb"><pre><span class="c">int</span> pfd[2];
-pipe(pfd);
-<span class="c">pid_t</span> pid = fork();
-if (pid == 0) {
-    <span class="d">/* GYEREK: olvas */</span>
-    <span class="a">close(pfd[1])</span>;  <span class="d">// írásóvéget lezárja!</span>
-    <span class="c">char</span> buf[100];
-    <span class="c">int</span> n = <span class="g">read(pfd[0], buf, sizeof(buf))</span>;
-    buf[n] = '\0';
-    printf("Kaptam: %s\n", buf);
-    <span class="a">close(pfd[0])</span>;
-    _exit(0);
-} else {
-    <span class="d">/* SZÜLŐ: ír */</span>
-    <span class="a">close(pfd[0])</span>;  <span class="d">// olvasóvéget lezárja!</span>
-    <span class="g">write(pfd[1], "Hello!", 6)</span>;
-    <span class="a">close(pfd[1])</span>;  <span class="d">// EOF jel a gyereknek</span>
-    wait(NULL);
-}</pre></div>
-<div class="wb"><span class="ii">⚠</span><div class="it"><strong>Kritikus:</strong> mindig zárd le a pipe véget, amelyiket nem használod! Ha az írásóvéget nyitva hagyod, az olvasó soha nem kap EOF-t.</div></div>`,
-exercises:[
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"A pipe(pfd) hívás után melyik fájlleíróba kell írni és melyikből olvasni?",
-opts:["pfd[0]-ba írunk, pfd[1]-ből olvasunk","pfd[1]-be írunk, pfd[0]-ból olvasunk","Mindkettőbe lehet írni és mindkettőből olvasni","A pipe() automatikusan stdin/stdout-ot állít be"],
-correct:1,exp:"Konvenció: pfd[1] = write end (írásovég), pfd[0] = read end (olvasóvég). Adatfolyam: pfd[1] → pipe puffer → pfd[0]."},
-{type:"code",typeLabel:"C KÓD",lang:"text/x-csrc",
-q:"Egészítsd ki a kódot: a szülő küldjön egy egész számot a gyereknek pipe-on, a gyerek írja ki a kétszeresét!\n\n(Tipp: write(pfd[1], &szam, sizeof(int)) és read(pfd[0], &kapott, sizeof(int)))",
-hint:"Szülő: close(pfd[0]), write pfd[1]-be, close(pfd[1]), wait. Gyerek: close(pfd[1]), read pfd[0]-ból, kiírja kétszeresét.",
-placeholder:"#include <stdio.h>\n#include <unistd.h>\n#include <sys/wait.h>\n\nint main() {\n    int pfd[2];\n    pipe(pfd);\n    int szam = 21;\n    pid_t pid = fork();\n    if (pid == 0) {\n        // gyerek\n        \n    } else {\n        // szülő\n        \n    }\n    return 0;\n}",
-patterns:[
-  [/close\s*\(\s*pfd\s*\[\s*1\s*\]\s*\)/],
-  [/read\s*\(\s*pfd\s*\[\s*0\s*\]/],
-  [/close\s*\(\s*pfd\s*\[\s*0\s*\]\s*\)/],
-  [/write\s*\(\s*pfd\s*\[\s*1\s*\]/],
-  [/\*\s*2|<<\s*1|2\s*\*/]
-],
-hints:["A gyereknek le kell zárnia a pfd[1]-et (close(pfd[1]))","A gyereknek olvasnia kell a pfd[0]-ból (read(pfd[0], ...)","A szülőnek le kell zárnia a pfd[0]-t (close(pfd[0]))","A szülőnek írnia kell a pfd[1]-be (write(pfd[1], &szam, sizeof(int)))","A gyereknek a kétszeresét kell kiírnia (*2)"],
-okMsg:"Tökéletes! close() az nem használt végeken + write/read + kétszeres számítás mind megvan."}
-]},
-
-{id:11,title:"exec függvénycsalád",sub:"execl, execv, execlp, execvp – másik program indítása",
-theory:`<h4>Mi az exec?</h4>
-<p>Az <code>exec</code> lecseréli az aktuális folyamat programját egy másikra. <strong>Nem hoz létre új folyamatot</strong> – ugyanaz a PID, de a memória felülíródik az új programmal.</p>
-<h4>A névcsoport logikája</h4>
-<div class="cb"><pre><span class="d">// l = list (NULL-lal zárt argumentumlista)</span>
-<span class="d">// v = vector (char* tömb)</span>
-<span class="d">// p = PATH-ban keresi a programot</span>
-<span class="d">// e = environment (saját env)</span>
-
-<span class="c">execl</span> (<span class="g">"/bin/ls"</span>, <span class="g">"ls"</span>, <span class="g">"-la"</span>, <span class="r">NULL</span>);
-<span class="c">execlp</span>(<span class="g">"ls"</span>,      <span class="g">"ls"</span>, <span class="g">"-la"</span>, <span class="r">NULL</span>);
-
-<span class="c">char</span> *args[] = { <span class="g">"ls"</span>, <span class="g">"-la"</span>, <span class="r">NULL</span> };
-<span class="c">execv</span> (<span class="g">"/bin/ls"</span>, args);
-<span class="c">execvp</span>(<span class="g">"ls"</span>,      args);</pre></div>
-<div class="wb"><span class="ii">⚠</span><div class="it"><strong>exec CSAK hiba esetén tér vissza!</strong> Ha sikerült, az aktuális kód folytatása soha nem hajtódik végre.</div></div>
-<h4>fork + exec – tipikus minta</h4>
-<div class="cb"><pre><span class="c">pid_t</span> pid = <span class="g">fork()</span>;
-if (pid == 0) {
-    <span class="c">execlp</span>(<span class="g">"ls"</span>, <span class="g">"ls"</span>, <span class="g">"-la"</span>, <span class="r">NULL</span>);
-    <span class="a">perror</span>("exec hiba"); <span class="d">// csak hiba esetén jut ide</span>
-    _exit(1);
-} else {
-    <span class="g">wait(NULL)</span>;
-}</pre></div>`,
-exercises:[
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mi a különbség az execl és az execlp között?",
-opts:["Az execl gyorsabb","Az execl teljes elérési utat vár (/bin/ls), az execlp a PATH-ban is keresi a programot","Az execlp tömböt vár, az execl listát","Az execlp új folyamatot hoz létre"],
-correct:1,exp:"A 'p' suffix = PATH keresés. execlp('ls',...) megkeresi a PATH-ban. execl('/bin/ls',...) csak az abszolút utat fogadja."},
-{type:"code",typeLabel:"C KÓD",lang:"text/x-csrc",
-q:"Írj C programot, amely fork() után a gyerekfolyamatban futtatja a 'date' parancsot execlp-vel! A szülő várja meg a gyereket.",
-hint:"execlp('date', 'date', NULL) – az első arg a program neve, a többi az argv[], mindig NULL-lal zárul.",
-placeholder:"#include <stdio.h>\n#include <unistd.h>\n#include <sys/wait.h>\n\nint main() {\n    \n}",
-patterns:[
-  [/fork\s*\(\s*\)/],
-  [/pid\s*==\s*0/],
-  [/execlp\s*\(\s*["']date["']|execvp\s*\(\s*["']date["']/],
-  [/wait\s*\(\s*(NULL|&|\w)/]
-],
-hints:["Hiányzik a fork() hívás","Hiányzik a pid==0 feltétel (gyerek ág)","Hiányzik az execlp('date','date',NULL) vagy execvp hívás","Hiányzik a wait(NULL) a szülő ágban"],
-okMsg:"Tökéletes! fork()+execlp()+wait() a klasszikus külső program futtatási minta."}
-]},
-
-{id:12,title:"Folyamatok közti kommunikáció",sub:"Signals, pipe, FIFO, popen/pclose, IPC áttekintés",
-theory:`<h4>IPC módszerek</h4>
-<div class="cb"><pre><span class="g">Signals</span>        <span class="d">→ kevés info, figyelmeztetés</span>
-<span class="g">Fájlok</span>         <span class="d">→ egyszerű, de lassú + szinkronizálási probléma</span>
-<span class="g">Pipe (névtelen)</span><span class="d">→ szülő-gyerek között, egyirányú, FIFO</span>
-<span class="g">FIFO (named)</span>  <span class="d">→ bármely folyamat, névvel azonosítható</span>
-<span class="g">Szemafor</span>       <span class="d">→ szinkronizáció, kölcsönös kizárás</span>
-<span class="g">Message queue</span>  <span class="d">→ üzenetcsomók, típus szerint szűrhető</span>
-<span class="g">Shared memory</span>  <span class="d">→ leggyorsabb: közös memóriaterület</span>
-<span class="g">Socket</span>         <span class="d">→ hálózaton át is (TCP/UDP/UNIX)</span></pre></div>
-<h4>popen / pclose</h4>
-<div class="cb"><pre><span class="y">#include &lt;stdio.h&gt;</span>
-
-<span class="d">// Külső parancs kimenetét olvassuk:</span>
-<span class="c">FILE</span> *fp = <span class="g">popen("ls -la", "r")</span>;
-<span class="c">char</span> buf[256];
-while (<span class="a">fgets(buf, sizeof(buf), fp)</span>)
-    printf("%s", buf);
-<span class="g">pclose(fp)</span>;  <span class="d">// lezár + wait()</span>
-
-<span class="d">// Külső parancs bemenetét írjuk:</span>
-<span class="c">FILE</span> *fp2 = <span class="g">popen("wc -l", "w")</span>;
-fprintf(fp2, "sor1\nsor2\n");
-<span class="g">pclose(fp2)</span>;</pre></div>
-<div class="ib"><span class="ii">💡</span><div class="it"><strong>popen háttere:</strong> automatikusan elvégzi a pipe()+fork()+exec() kombinációt. Egyszerűbb mint a nyers pipe() kezelés.</div></div>`,
-exercises:[
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mikor érdemes popen()-t használni pipe() helyett?",
-opts:["Soha – elavult","Ha shell parancs kimenetét akarjuk olvasni FILE* streamen, anélkül hogy kézzel kezelnénk pipe+fork+exec-et","Csak ha a pipe() nem sikerült","Ha két gyerekfolyamat között kell kommunikálni"],
-correct:1,exp:"A popen() kényelmes absztrakció: automatikusan elvégzi a pipe()+fork()+exec() kombinációt. Hátránya: csak egyirányú."},
-{type:"code",typeLabel:"C KÓD",lang:"text/x-csrc",
-q:"Írj C kódrészletet, amely popen()-nel lefuttatja a 'date' parancsot, beolvassa a kimenetét és kiírja a stdout-ra!",
-hint:"popen('date', 'r') visszaad egy FILE*-t. fgets(buf, sizeof(buf), fp) soronként olvas. pclose(fp) a végén.",
-placeholder:"#include <stdio.h>\n\nint main() {\n    char buf[256];\n    \n    return 0;\n}",
-patterns:[
-  [/popen\s*\(\s*["']date["']/],
-  [/fgets\s*\(|fread\s*\(|fscanf\s*\(/],
-  [/printf\s*\(|puts\s*\(|fputs\s*\(/],
-  [/pclose\s*\(/]
-],
-hints:["Hiányzik a popen('date','r') hívás","Hiányzik a beolvasás (fgets vagy hasonló)","Hiányzik a kiírás (printf/puts)","Hiányzik a pclose() a végén"],
-okMsg:"Tökéletes! popen() → fgets() loop → pclose() a klasszikus minta."}
-]},
-
-{id:13,title:"FIFO / Named Pipe",sub:"mkfifo, open, read, write, close, unlink – bármely folyamat között",
-theory:`<h4>Mi a FIFO?</h4>
-<p>Névvel ellátott pipe – megőrzi a pipe tulajdonságait, de szimbolikus névvel rendelkezik, így bármely két folyamat (nem csak szülő-gyerek) kommunikálhat rajta.</p>
-<div class="cb"><pre><span class="d">ls -l /tmp/myfifo:</span>
-<span class="g">prw-r--r--</span> 1 user group 0 jan 1 myfifo
-<span class="a">^</span>
-<span class="a">p</span> = pipe (FIFO fájltípus)</pre></div>
-<h4>Létrehozás és használat</h4>
-<div class="cb"><pre><span class="y">#include &lt;sys/stat.h&gt;</span>
-<span class="y">#include &lt;fcntl.h&gt;</span>
-<span class="y">#include &lt;unistd.h&gt;</span>
-
-<span class="g">mkfifo("/tmp/myfifo", 0666)</span>;
-
-<span class="d">// ÍRÁS (producer):</span>
-<span class="c">int</span> fd = <span class="g">open("/tmp/myfifo", O_WRONLY)</span>;
-<span class="g">write(fd, "adat", 4)</span>;
-<span class="g">close(fd)</span>;
-
-<span class="d">// OLVASÁS (consumer):</span>
-<span class="c">int</span> fd = <span class="g">open("/tmp/myfifo", O_RDONLY)</span>;
-<span class="c">char</span> buf[100];
-<span class="g">read(fd, buf, sizeof(buf))</span>;
-<span class="g">close(fd)</span>;
-
-<span class="d">// Törlés:</span>
-<span class="g">unlink("/tmp/myfifo")</span>;</pre></div>
-<h4>O_NONBLOCK</h4>
-<div class="cb"><pre><span class="d">// Alapértelmezett: open() blokkolódik amíg másik vég nincs</span>
-<span class="d">// O_NONBLOCK esetén:</span>
-open("/tmp/f", <span class="y">O_RDONLY | O_NONBLOCK</span>); <span class="d">// azonnal</span>
-open("/tmp/f", <span class="y">O_WRONLY | O_NONBLOCK</span>); <span class="d">// -1 ha nincs olvasó</span></pre></div>`,
-exercises:[
-{type:"any",typeLabel:"PARANCS",q:"Hozz létre egy FIFO fájlt /tmp/sajatfifo névvel parancssorból!",
-hint:"A mkfifo parancs létrehozza a named pipe-ot.",
-placeholder:"mkfifo ...",
-expected:["mkfifo /tmp/sajatfifo"],
-okMsg:"Helyes! A mkfifo FIFO speciális fájlt hoz létre (fájltípusa: p).",
-errMsg:"Helyes szintaxis: mkfifo /tmp/sajatfifo"},
-{type:"multi",typeLabel:"FELELETVÁLASZTÓS",q:"Mi történik, ha O_NONBLOCK nélkül nyitjuk meg írásra a FIFO-t, de még nincs olvasója?",
-opts:["Hibaüzenetet ad vissza azonnal (-1)","Létrehozza a fájlt és folytatja a futást","Blokkolódik (vár), amíg egy másik folyamat meg nem nyitja olvasásra","SIGPIPE jelet küld"],
-correct:2,exp:"FIFO open() alapértelmezetten blokkolódik: az írásra nyitás vár amíg van olvasója. Ez szinkronizációs pontot jelent. O_NONBLOCK-kal -1-et ad vissza ENXIO hibával."},
-{type:"code",typeLabel:"C KÓD",lang:"text/x-csrc",
-q:"Írj C kódot (az írói oldalt): hozd létre a /tmp/testfifo FIFO-t, nyisd meg írásra, küld el a 'Hello FIFO' stringet, zárd le és töröld!",
-hint:"mkfifo() → open(O_WRONLY) → write() → close() → unlink(). A strlen+1 vagy fix méret a write-hoz.",
-placeholder:"#include <stdio.h>\n#include <fcntl.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <string.h>\n\nint main() {\n    \n    return 0;\n}",
-patterns:[
-  [/mkfifo\s*\(\s*["']\/tmp\/testfifo["']/],
-  [/open\s*\(.*O_WRONLY/],
-  [/write\s*\(.*[Hh]ello/],
-  [/close\s*\(/],
-  [/unlink\s*\(\s*["']\/tmp\/testfifo["']/]
-],
-hints:["Hiányzik a mkfifo('/tmp/testfifo', 0666) hívás","Hiányzik az open(..., O_WRONLY) hívás","Hiányzik a write() a 'Hello FIFO' szöveggel","Hiányzik a close(fd) hívás","Hiányzik az unlink('/tmp/testfifo') törlés"],
-okMsg:"Tökéletes! mkfifo → open(O_WRONLY) → write → close → unlink – ez a teljes írói oldal."}
-]}
+const DATA = [
+  {
+    "id": 1,
+    "title": "OS & Linux alapjai",
+    "sub": "Kernel, shell, Linux felépítése, CLI gondolkodás",
+    "theory": "<h4>Mi az operációs rendszer?</h4>\n<p>Az operációs rendszer (OS) szoftver, amely <b>közvetít a hardver és az alkalmazások között</b>. Kezeli a processzort, memóriát, fájlrendszert, I/O eszközöket és a folyamatokat.</p>\n<div class=\"note info\"><span>💡</span><p><b>Analógia:</b> az OS olyan mint egy étterem menedzsere – te (az alkalmazás) csak a pincérnek szólsz, ő szervezi a konyhát (hardver).</p></div>\n<h4>A Linux rétegei</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">Felhasználói tér</span>  │ bash, python, vim, Firefox...\n─────────────────┼──────────────────────────────────\n<span class=\"gr\">Shell / libc</span>     │ rendszerhívások burkolata\n─────────────────┼──────────────────────────────────\n<span class=\"pu\">Kernel</span>           │ ütemező, memória, driverek, VFS\n─────────────────┼──────────────────────────────────\n<span class=\"ye\">Hardver</span>          │ CPU, RAM, SSD, NIC, GPU...</pre></div>\n<h4>Kernel vs Shell</h4>\n<ul>\n<li><b>Kernel:</b> a Linux magja. Közvetlenül kezeli a hardvert. Ring 0 privilegizált módban fut. Nem elérhető közvetlenül – csak rendszerhívásokon át.</li>\n<li><b>Shell:</b> parancsértelmező (interpreter). A kernellel syscallokon keresztül kommunikál. Fajták: <code>bash</code>, <code>zsh</code>, <code>sh</code>, <code>fish</code>, <code>ksh</code>.</li>\n</ul>\n<h4>CLI gondolkodás: kis programok + pipe</h4>\n<p>Unix-filozófia: minden program egy dolgot csináljon jól, szöveget vegyen be és adjon ki. A <code>|</code> (pipe) ezeket összeköti.</p>\n<div class=\"code-block\"><pre><span class=\"cm\"># Ki van bejelentkezve és hányan?</span>\n<span class=\"cy\">who</span> | <span class=\"gr\">wc -l</span>\n\n<span class=\"cm\"># Top 5 legtöbbet használt parancs</span>\n<span class=\"cy\">history</span> | <span class=\"gr\">awk '{print $2}'</span> | <span class=\"ye\">sort</span> | <span class=\"pu\">uniq -c</span> | <span class=\"or\">sort -rn</span> | <span class=\"re\">head -5</span></pre></div>\n<div class=\"note warn\"><span>⚠</span><p><b>Case-sensitive!</b> Linux-on a <code>Fajl.txt</code> és a <code>fajl.txt</code> két különböző fájl.</p></div>",
+    "exercises": [
+      {
+        "type": "mc",
+        "q": "Mi a Linux kernel elsődleges feladata?",
+        "opts": [
+          "Szöveges parancsokat értelmez és futtat",
+          "Közvetlenül kezeli a hardvert és az erőforrásokat (CPU, memória, driverek)",
+          "Weboldalakat tölt le és jelenít meg",
+          "A bash shell másik elnevezése"
+        ],
+        "correct": 1,
+        "exp": "A kernel (mag) hardverrel kommunikál, kezeli a memóriát, CPU ütemezést, eszközillesztőket. A shell (bash) felette fut és parancsokat értelmez."
+      },
+      {
+        "type": "mc",
+        "q": "Mit jelent a Unix-filozófia CLI kontextusban?",
+        "opts": [
+          "Egyetlen nagy program mindent megold",
+          "Minden programnak grafikus felületnek kell lennie",
+          "Sok kis program, mindegyik egy dolgot csinál jól; a | összeköti a kimeneteket/bemeneteket",
+          "A pipe csak bash-ben létezik"
+        ],
+        "correct": 2,
+        "exp": "Unix-filozófia: do one thing and do it well. A | (pipe) összeköti a programokat: egyik stdout → másik stdin."
+      },
+      {
+        "type": "cmd",
+        "q": "Írd meg a parancsot, amely kiírja az aktuális shell teljes elérési útját!",
+        "hint": "Változó értékét echo-val lehet kiírni, a neve elé $ jel kell.",
+        "placeholder": "echo ...",
+        "accepted": [
+          "echo $SHELL",
+          "echo ${SHELL}"
+        ],
+        "ok": "Helyes! Az echo $SHELL a $SHELL környezeti változó értékét írja ki, pl. /bin/bash.",
+        "err": "Helyes forma: echo $SHELL – az echo parancs kiírja a $SHELL változó értékét."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Shell parancsok",
+    "sub": "Alapparancsok, formátum, man/whatis/apropos, fájlnevek, útvonalak",
+    "theory": "<h4>Parancsok formátuma</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">parancsnév</span> <span class=\"ye\">[opciók]</span> <span class=\"gr\">[argumentumok]</span>\n\n<span class=\"cy\">ls</span> <span class=\"ye\">-la</span> <span class=\"gr\">/home/user</span>       <span class=\"cm\"># -l: long, -a: all (rejtett is)</span>\n<span class=\"cy\">cp</span> <span class=\"ye\">-r</span> <span class=\"gr\">forras/ cel/</span>     <span class=\"cm\"># -r: recursive</span>\n<span class=\"cy\">chmod</span> <span class=\"ye\">u+x</span> <span class=\"gr\">script.sh</span>   <span class=\"cm\"># u=user, +x=add execute</span></pre></div>\n<p>Opciók: rövid (<code>-l</code>) vagy hosszú (<code>--long</code>) forma. Kombinálhatók: <code>-la</code> = <code>-l -a</code>. Elválasztó a szóköz.</p>\n<h4>Alapparancsok</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">pwd</span>               <span class=\"cm\"># aktuális könyvtár (print working dir)</span>\n<span class=\"cy\">ls</span> <span class=\"ye\">-la</span>            <span class=\"cm\"># részletes listázás + rejtett fájlok</span>\n<span class=\"cy\">cd</span> <span class=\"gr\">/var/log</span>       <span class=\"cm\"># könyvtárváltás (change dir)</span>\n<span class=\"cy\">cp</span> <span class=\"ye\">-r</span> <span class=\"gr\">src/ dst/</span>  <span class=\"cm\"># rekurzív másolás</span>\n<span class=\"cy\">mv</span> <span class=\"gr\">old new</span>       <span class=\"cm\"># átnevezés / mozgatás</span>\n<span class=\"cy\">rm</span> <span class=\"ye\">-rf</span> <span class=\"gr\">dir/</span>      <span class=\"cm\"># ⚠ rekurzív törlés – visszavonhatatlan!</span>\n<span class=\"cy\">mkdir</span> <span class=\"ye\">-p</span> <span class=\"gr\">a/b/c</span>  <span class=\"cm\"># könyvtárlánc egyszerre</span>\n<span class=\"cy\">cat</span> <span class=\"gr\">f.txt</span>        <span class=\"cm\"># fájl tartalmának kiírása</span>\n<span class=\"cy\">less</span> <span class=\"gr\">f.txt</span>       <span class=\"cm\"># lapozható megjelenítés (q = kilép)</span>\n<span class=\"cy\">touch</span> <span class=\"gr\">f.txt</span>      <span class=\"cm\"># üres fájl létrehozása</span>\n<span class=\"cy\">wc</span> <span class=\"ye\">-l</span> <span class=\"gr\">f.txt</span>      <span class=\"cm\"># sorok száma</span></pre></div>\n<h4>Segítség kérése</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">man</span> <span class=\"gr\">ls</span>           <span class=\"cm\"># teljes kézikönyv (q = kilép)</span>\n<span class=\"cy\">whatis</span> <span class=\"gr\">grep</span>     <span class=\"cm\"># egy soros leírás</span>\n<span class=\"cy\">apropos</span> <span class=\"gr\">copy</span>    <span class=\"cm\"># parancsok keresése kulcsszó szerint</span>\n<span class=\"cy\">ls</span> <span class=\"ye\">--help</span>       <span class=\"cm\"># rövid súgó</span></pre></div>\n<h4>Útvonalak</h4>\n<div class=\"code-block\"><pre><span class=\"gr\">/</span>       <span class=\"cm\"># gyökér</span>    <span class=\"gr\">~</span>  <span class=\"cm\"># home ($HOME)</span>\n<span class=\"gr\">.</span>       <span class=\"cm\"># aktuális</span>  <span class=\"gr\">..</span> <span class=\"cm\"># szülő könyvtár</span>\n\n<span class=\"cm\"># Abszolút (/-el kezdődik):</span>\n<span class=\"gr\">/home/user/projekt/main.c</span>\n\n<span class=\"cm\"># Relatív (aktuális könyvtártól):</span>\n<span class=\"gr\">projekt/main.c</span>    <span class=\"cm\"># ha most /home/user-ben vagyunk</span>\n<span class=\"gr\">../other/file</span>     <span class=\"cm\"># szülőn át</span></pre></div>",
+    "exercises": [
+      {
+        "type": "cmd",
+        "q": "Listázd ki az aktuális könyvtár összes fájlját (rejtettekkel együtt), részletes formátumban!",
+        "hint": "Az ls -l opciója részletes listát, -a a rejtetteket is mutatja. Kombinálható: -la",
+        "placeholder": "ls ...",
+        "accepted": [
+          "ls -la",
+          "ls -al",
+          "ls -l -a",
+          "ls -a -l",
+          "ls --all -l",
+          "ls -l --all"
+        ],
+        "ok": "Helyes! Az -la kombináció: -l (long format) + -a (all, rejtett fájlok is).",
+        "err": "Helyes forma: ls -la (vagy ls -al) – az -l részletes, az -a a rejtett fájlokat is mutatja."
+      },
+      {
+        "type": "cmd",
+        "q": "Hozz létre egyszerre egy teljes könyvtárat: projekt/src/utils (a közbülső könyvtárak sem léteznek)!",
+        "hint": "A mkdir -p opciója létrehozza a hiányzó szülőkönyvtárakat is.",
+        "placeholder": "mkdir ...",
+        "accepted": [
+          "mkdir -p projekt/src/utils"
+        ],
+        "ok": "Tökéletes! A -p (parents) flag minden hiányzó szülőkönyvtárat automatikusan létrehoz.",
+        "err": "Helyes forma: mkdir -p projekt/src/utils – a -p flag nélkül hiba lenne, ha a közbülső könyvtárak hiányoznak."
+      },
+      {
+        "type": "mc",
+        "q": "Mit csinál az apropos copy parancs?",
+        "opts": [
+          "Lemásolja a copy nevű fájlt",
+          "Megnyitja a copy man oldalát",
+          "Kilistázza az összes parancsot, amelynek leírásában szerepel a 'copy' szó",
+          "Megmutatja, hol van a copy program a fájlrendszeren"
+        ],
+        "correct": 2,
+        "exp": "Az apropos kulcsszó alapján keresi a man oldalak rövid leírásait – akkor hasznos, ha nem tudod pontosan a parancs nevét, csak mit csinál."
+      },
+      {
+        "type": "mc",
+        "q": "Mi a különbség az abszolút és a relatív elérési út között?",
+        "opts": [
+          "Az abszolút rövidebb, a relatív hosszabb",
+          "Az abszolút /-el kezdődik és független az aktuális könyvtártól; a relatív az aktuális könyvtárhoz képest értendő",
+          "A relatív csak home könyvtárban működik",
+          "Nincs különbség, csak stílusbeli kérdés"
+        ],
+        "correct": 1,
+        "exp": "Abszolút: /home/user/file.txt – mindig ugyanaz. Relatív: projekt/file.txt – az aktuális könyvtártól függ (pwd)."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Metakarakterek & átirányítás",
+    "sub": "> >> < | 2> 2>&1 * ? [] idézőjelek pipeline-ok",
+    "theory": "<h4>Átirányítás</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">cmd</span> <span class=\"ye\">></span>  <span class=\"gr\">fajl</span>         <span class=\"cm\"># stdout → fájl (felülír)</span>\n<span class=\"cy\">cmd</span> <span class=\"ye\">>></span> <span class=\"gr\">fajl</span>         <span class=\"cm\"># stdout → fájl (hozzáfűz)</span>\n<span class=\"cy\">cmd</span> <span class=\"ye\"><</span>  <span class=\"gr\">fajl</span>         <span class=\"cm\"># stdin ← fájl</span>\n<span class=\"cy\">cmd</span> <span class=\"ye\">2></span> <span class=\"gr\">fajl</span>         <span class=\"cm\"># stderr → fájl</span>\n<span class=\"cy\">cmd</span> <span class=\"ye\">2>&1</span>             <span class=\"cm\"># stderr → stdout (ugyanoda)</span>\n<span class=\"cy\">cmd</span> <span class=\"ye\">>/dev/null 2>&1</span> <span class=\"cm\"># minden kimenet eldobva</span>\n<span class=\"cy\">cmd</span> <span class=\"ye\">&></span> <span class=\"gr\">fajl</span>         <span class=\"cm\"># stdout+stderr egyszerre (bash 4+)</span></pre></div>\n<h4>Pipeline (|)</h4>\n<div class=\"code-block\"><pre><span class=\"cm\"># Első stdout → következő stdin</span>\n<span class=\"cy\">ls -la</span> | <span class=\"gr\">grep \".txt\"</span> | <span class=\"ye\">sort</span> | <span class=\"pu\">wc -l</span>\n<span class=\"cm\"># Megszámolja a .txt fájlokat rendezve</span></pre></div>\n<h4>Globbing (fájlnév helyettesítők)</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">*</span>        <span class=\"cm\"># 0+ tetszőleges karakter</span>\n<span class=\"ye\">?</span>        <span class=\"cm\"># pontosan 1 tetszőleges karakter</span>\n<span class=\"ye\">[abc]</span>    <span class=\"cm\"># a, b vagy c</span>\n<span class=\"ye\">[a-z]</span>    <span class=\"cm\"># kisbetű</span>\n<span class=\"ye\">[!0-9]</span>   <span class=\"cm\"># NEM számjegy</span>\n\n<span class=\"cy\">ls</span> <span class=\"ye\">*.c</span>           <span class=\"cm\"># minden .c fájl</span>\n<span class=\"cy\">ls</span> <span class=\"ye\">temp?.txt</span>     <span class=\"cm\"># temp1.txt, tempa.txt stb.</span>\n<span class=\"cy\">ls</span> <span class=\"ye\">[A-Z]*.sh</span>    <span class=\"cm\"># nagybetűvel kezdődő .sh fájlok</span></pre></div>\n<h4>Idézőjelek és escape</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">'...'</span>   <span class=\"cm\"># betű szerint – semmi sem értelmez</span>\n<span class=\"ye\">\"...\"</span>   <span class=\"cm\"># értelmezi: $var, $(cmd), \\</span>\n<span class=\"ye\">\\</span>      <span class=\"cm\"># a következő karaktert levédi</span>\n\nname=vilag\necho <span class=\"gr\">'Hello $name'</span>   <span class=\"cm\"># → Hello $name</span>\necho <span class=\"gr\">\"Hello $name\"</span>   <span class=\"cm\"># → Hello vilag</span>\necho <span class=\"gr\">\\$name</span>          <span class=\"cm\"># → $name (levédve)</span></pre></div>\n<div class=\"note warn\"><span>⚠</span><p><b>Globbing ≠ Regex!</b> Shell-ben a <code>*</code> = bármennyi karakter. Regex-ben <code>*</code> = az előző elem 0+ ismétlése.</p></div>",
+    "exercises": [
+      {
+        "type": "cmd",
+        "q": "Futtasd az ls parancsot és mentsd a kimenetét a lista.txt fájlba (ha létezik, írja felül)!",
+        "hint": "A > operátor felülírva irányítja a kimenetet fájlba.",
+        "placeholder": "ls ...",
+        "accepted": [
+          "ls > lista.txt",
+          "ls>lista.txt",
+          "ls -la > lista.txt",
+          "ls -l > lista.txt",
+          "ls -a > lista.txt"
+        ],
+        "ok": "Helyes! A > átirányítja az stdout-ot fájlba. Ha a fájl létezett, felülírja.",
+        "err": "Helyes forma: ls > lista.txt – a > irányítja a kimenetet fájlba (felülír)."
+      },
+      {
+        "type": "cmd",
+        "q": "Futtasd a find / -name passwd parancsot, de a hibaüzeneteket nyeld el (küldd /dev/null-ba)!",
+        "hint": "A stderr fájlleíró száma 2. A /dev/null minden beleírt adatot elnyel.",
+        "placeholder": "find / -name passwd ...",
+        "accepted": [
+          "find / -name passwd 2>/dev/null",
+          "find / -name passwd 2> /dev/null"
+        ],
+        "ok": "Tökéletes! A 2>/dev/null a stderr-t (fd 2) az adatelnyelő /dev/null-ba irányítja.",
+        "err": "Helyes: find / -name passwd 2>/dev/null – a 2> a stderr-t irányítja át."
+      },
+      {
+        "type": "cmd",
+        "q": "Listázd ki csak a .sh kiterjesztésű fájlokat az aktuális könyvtárban!",
+        "hint": "A * globbing karakter bármennyi karaktert helyettesít.",
+        "placeholder": "ls ...",
+        "accepted": [
+          "ls *.sh",
+          "ls -l *.sh",
+          "ls -la *.sh",
+          "ls -a *.sh"
+        ],
+        "ok": "Helyes! A *.sh globbing minta minden .sh-ra végződő fájlra illeszkedik.",
+        "err": "Globbing mintát kell használni: ls *.sh"
+      },
+      {
+        "type": "mc",
+        "q": "Mit csinál a 2>&1 átirányítás?",
+        "opts": [
+          "A stdin-t irányítja stdout-ra",
+          "A stderr-t (2-es fd) irányítja ugyanoda, ahová a stdout (1-es fd) megy",
+          "Megduplázza a kimeneti fájlleírót",
+          "Bezárja mindkét kimenetet"
+        ],
+        "correct": 1,
+        "exp": "2>&1 = 'a 2-es fájlleíró (stderr) menjen ugyanoda, ahová az 1-es (stdout) van irányítva'. Tipikusan: cmd > fajl 2>&1 – minden kimenet a fájlba kerül."
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Reguláris kifejezések",
+    "sub": "^ $ . * + [] {m,n} csoportosítás – alap vs kiterjesztett (ERE)",
+    "theory": "<h4>Alapszabályok</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">.</span>       <span class=\"cm\"># bármely karakter (nem újsor)</span>\n<span class=\"ye\">^</span>       <span class=\"cm\"># sor eleje</span>\n<span class=\"ye\">$</span>       <span class=\"cm\"># sor vége</span>\n<span class=\"ye\">\\c</span>      <span class=\"cm\"># c betű szerinti (pl. \\. = pont, \\\\ = backslash)</span>\n\n<span class=\"gr\">^$</span>      <span class=\"cm\"># üres sor</span>\n<span class=\"gr\">^ *$</span>    <span class=\"cm\"># üres vagy csak szóközök</span>\n<span class=\"gr\">ab.</span>     <span class=\"cm\"># aba, abb, abc, ab1 stb.</span></pre></div>\n<h4>Kvantorök</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">e*</span>       <span class=\"cm\"># 0 vagy többször    (alap + ERE)</span>\n<span class=\"ye\">e+</span>       <span class=\"cm\"># 1 vagy többször    (csak ERE)</span>\n<span class=\"ye\">e?</span>       <span class=\"cm\"># 0 vagy 1-szer      (csak ERE)</span>\n<span class=\"ye\">e{m,n}</span>  <span class=\"cm\"># legalább m, legfeljebb n (ERE)</span>\n<span class=\"ye\">e{3}</span>     <span class=\"cm\"># pontosan 3-szor</span>\n<span class=\"ye\">e{2,}</span>    <span class=\"cm\"># legalább 2-szer</span></pre></div>\n<h4>Karakterosztályok</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">[abc]</span>    <span class=\"cm\"># a, b vagy c</span>\n<span class=\"ye\">[a-z]</span>    <span class=\"cm\"># kisbetű</span>\n<span class=\"ye\">[0-9]</span>    <span class=\"cm\"># számjegy</span>\n<span class=\"ye\">[^0-9]</span>   <span class=\"cm\"># NEM számjegy (^ = tagadás [ ] belsejében)</span>\n<span class=\"ye\">[:digit:]</span><span class=\"cm\"># = [0-9]   │  </span><span class=\"ye\">[:alpha:]</span><span class=\"cm\">  # betű</span>\n<span class=\"ye\">[:alnum:]</span><span class=\"cm\"># betű/szám │  </span><span class=\"ye\">[:space:]</span><span class=\"cm\">  # whitespace</span></pre></div>\n<h4>Alap vs ERE</h4>\n<div class=\"code-block\"><pre><span class=\"cm\"># Alap regex (grep, sed alapból):</span>\n<span class=\"gr\">\\(ab\\)*</span>    <span class=\"cm\"># csoport + *</span>\n<span class=\"gr\">\\{3\\}</span>      <span class=\"cm\"># pontosan 3-szor</span>\n\n<span class=\"cm\"># Kiterjesztett ERE (grep -E, egrep, sed -E):</span>\n<span class=\"gr\">(ab)*</span>    <span class=\"gr\">cat|dog</span>    <span class=\"gr\">[0-9]{4}</span>\n\n<span class=\"cm\"># Visszahivatkozás \\1:</span>\n<span class=\"gr\">^(.).*\\1$</span>  <span class=\"cm\"># ugyanolyan karakterrel kezd/végz</span></pre></div>",
+    "exercises": [
+      {
+        "type": "cmd",
+        "q": "Írj grep parancsot, amely a fajl.txt-ből kilistázza az összes sort, amely számjeggyel kezdődik!",
+        "hint": "A ^ a sor elejére illeszt, a [0-9] számjegyre illeszt.",
+        "placeholder": "grep ...",
+        "accepted": [
+          "grep '^[0-9]' fajl.txt",
+          "grep \"^[0-9]\" fajl.txt",
+          "grep -E '^[0-9]' fajl.txt",
+          "grep '^[[:digit:]]' fajl.txt"
+        ],
+        "ok": "Helyes! ^[0-9]: ^ = sor eleje, [0-9] = számjegy karakterosztály.",
+        "err": "Helyes forma: grep '^[0-9]' fajl.txt – ^ = sor eleje, [0-9] = számjegy."
+      },
+      {
+        "type": "regex",
+        "q": "Írj ERE reguláris kifejezést, amely pontosan 5 jegyű számra illeszt (csak számjegyek, semmi más)!",
+        "hint": "A ^ és $ horgonyok kellenek. A {5} kvantor pontosan 5 ismétlést jelent.",
+        "placeholder": "^...$",
+        "match": [
+          "12345",
+          "00000",
+          "99999"
+        ],
+        "nomatch": [
+          "1234",
+          "123456",
+          "1234a",
+          "12 45",
+          ""
+        ]
+      },
+      {
+        "type": "mc",
+        "q": "Mit illeszt a ^[^0-9]*$ reguláris kifejezés?",
+        "opts": [
+          "Csak számjegyekből álló sort",
+          "Csak üres sort",
+          "Olyan sort, amely egyáltalán nem tartalmaz számjegyet (üres sor is illik)",
+          "Pontosan egy nem-számjegy karaktert"
+        ],
+        "correct": 2,
+        "exp": "^ = sor eleje, [^0-9] = nem számjegy, * = 0 vagy többször, $ = sor vége. Tehát: elejétől végéig csak nem-számjegy karakterek (vagy üres sor)."
+      },
+      {
+        "type": "mc",
+        "q": "Melyik az ERE szintaxis (kiterjesztett reguláris kifejezés)?",
+        "opts": [
+          "\\(ab\\)\\{3\\}",
+          "(ab){3}",
+          "(ab)\\{3\\}",
+          "\\(ab\\){3}"
+        ],
+        "correct": 1,
+        "exp": "ERE-ben (grep -E): csoportosítás (), kvantorök {3}, | közvetlen. Alap regex-ben ezeket \\(\\), \\{3\\} formában kell írni."
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "grep, sed, awk",
+    "sub": "Szövegfeldolgozás parancssorból – keresés, csere, mezőfeldolgozás",
+    "theory": "<h4>grep – szövegkeresés</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">grep</span> <span class=\"ye\">'minta'</span> <span class=\"gr\">fajl</span>       <span class=\"cm\"># minta sorai</span>\n<span class=\"cy\">grep</span> <span class=\"ye\">-v</span> <span class=\"gr\">'minta'</span>       <span class=\"cm\"># -v: NEM egyező sorok</span>\n<span class=\"cy\">grep</span> <span class=\"ye\">-n</span> <span class=\"gr\">'minta'</span>       <span class=\"cm\"># -n: sorszámmal</span>\n<span class=\"cy\">grep</span> <span class=\"ye\">-c</span> <span class=\"gr\">'minta'</span>       <span class=\"cm\"># -c: csak a találatok száma</span>\n<span class=\"cy\">grep</span> <span class=\"ye\">-i</span> <span class=\"gr\">'minta'</span>       <span class=\"cm\"># -i: case-insensitive</span>\n<span class=\"cy\">grep</span> <span class=\"ye\">-E</span> <span class=\"gr\">'regex'</span>       <span class=\"cm\"># -E: kiterjesztett ERE</span>\n<span class=\"cy\">grep</span> <span class=\"ye\">-r</span> <span class=\"gr\">'minta' dir/'</span> <span class=\"cm\"># -r: rekurzív keresés</span></pre></div>\n<h4>sed – folyamszerkesztő</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">sed</span> <span class=\"ye\">'s/régi/új/'</span>        <span class=\"cm\"># első előfordulás soronként</span>\n<span class=\"cy\">sed</span> <span class=\"ye\">'s/régi/új/g'</span>       <span class=\"cm\"># összes előfordulás (global)</span>\n<span class=\"cy\">sed</span> <span class=\"ye\">'/minta/d'</span>          <span class=\"cm\"># illeszkedő sorok törlése</span>\n<span class=\"cy\">sed</span> <span class=\"ye\">-n '3,7p'</span>           <span class=\"cm\"># 3-7. sorok kiírása</span>\n<span class=\"cy\">sed</span> <span class=\"ye\">-i 's/foo/bar/g'</span> <span class=\"gr\">f</span> <span class=\"cm\"># in-place szerkesztés!</span></pre></div>\n<h4>awk – mezőfeldolgozás</h4>\n<div class=\"code-block\"><pre><span class=\"cm\"># awk 'feltétel { akció }' fájl</span>\n<span class=\"cy\">awk</span> <span class=\"ye\">'{print $1}'</span>           <span class=\"cm\"># első mező ($1, $2... $NF)</span>\n<span class=\"cy\">awk</span> <span class=\"ye\">'{print $NF}'</span>          <span class=\"cm\"># utolsó mező (NF = mezők száma)</span>\n<span class=\"cy\">awk</span> <span class=\"ye\">-F: '{print $1}'</span>      <span class=\"cm\"># : elválasztóval</span>\n<span class=\"cy\">awk</span> <span class=\"ye\">'/minta/ {print $2}'</span>  <span class=\"cm\"># feltételes</span>\n<span class=\"cy\">awk</span> <span class=\"ye\">'{s+=$1} END{print s}'</span> <span class=\"cm\"># összegzés</span>\n<span class=\"cy\">awk</span> <span class=\"ye\">'NR>5'</span>                 <span class=\"cm\"># 5. sortól</span></pre></div>\n<h4>Kombinált példa</h4>\n<div class=\"code-block\"><pre><span class=\"cm\"># Felhasználónevek az /etc/passwd-ból, UID szerint rendezve</span>\n<span class=\"cy\">cat</span> <span class=\"gr\">/etc/passwd</span> | <span class=\"ye\">grep -v '^#'</span> | <span class=\"pu\">awk -F: '{print $1,$3}'</span> | <span class=\"or\">sort -k2 -n</span></pre></div>",
+    "exercises": [
+      {
+        "type": "cmd",
+        "q": "Az /etc/passwd fájlból listázd ki az összes olyan sort, amely tartalmazza a 'bash' szöveget!",
+        "hint": "grep alapszintaxis: grep 'minta' fajl",
+        "placeholder": "grep ...",
+        "accepted": [
+          "grep 'bash' /etc/passwd",
+          "grep \"bash\" /etc/passwd",
+          "grep bash /etc/passwd",
+          "grep -i 'bash' /etc/passwd"
+        ],
+        "ok": "Helyes! A grep megkeresi a 'bash' előfordulásait az /etc/passwd minden sorában.",
+        "err": "Helyes forma: grep 'bash' /etc/passwd"
+      },
+      {
+        "type": "cmd",
+        "q": "Cseréld ki az összes 'foo' szöveget 'bar'-ra egy fajl.txt-ben (csak írd ki az eredményt, ne módosítsd a fájlt – nincs -i flag)!",
+        "hint": "A sed 's/minta/csere/g' – a g flag minden előfordulást cserél soronként.",
+        "placeholder": "sed ...",
+        "accepted": [
+          "sed 's/foo/bar/g' fajl.txt",
+          "sed \"s/foo/bar/g\" fajl.txt"
+        ],
+        "ok": "Tökéletes! s/foo/bar/g: s = substitute, / elválasztók, g = global (összes soron belül).",
+        "err": "Helyes forma: sed 's/foo/bar/g' fajl.txt"
+      },
+      {
+        "type": "cmd",
+        "q": "Írd ki az /etc/passwd első mezőit (felhasználóneveket) – az elválasztó karakter a kettőspont!",
+        "hint": "Az awk -F: beállítja az elválasztót, a $1 az első mezőre hivatkozik.",
+        "placeholder": "awk ...",
+        "accepted": [
+          "awk -F: '{print $1}' /etc/passwd",
+          "awk -F':' '{print $1}' /etc/passwd",
+          "awk -F \":\" '{print $1}' /etc/passwd"
+        ],
+        "ok": "Helyes! -F: = field separator, $1 = első mező = felhasználónév.",
+        "err": "Helyes forma: awk -F: '{print $1}' /etc/passwd"
+      },
+      {
+        "type": "mc",
+        "q": "Melyik sed parancs törli az összes üres sort egy fájlból?",
+        "opts": [
+          "sed 's/empty//' fajl",
+          "sed '/^$/d' fajl",
+          "sed -d '' fajl",
+          "sed 'p' fajl"
+        ],
+        "correct": 1,
+        "exp": "/^$/ = üres sorra illeszkedő regex (^ = sor eleje, $ = sor vége = köztük semmi), /d = delete. Tehát: töröld az üres sorokat."
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Shell programozás",
+    "sub": "#!/bin/bash, változók, if, for, while, case, test, aritmetika",
+    "theory": "<h4>Script alapszerkezete</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">#!/bin/bash</span>            <span class=\"cm\"># shebang – melyik interpreter futtatja</span>\n\n<span class=\"cm\"># Változók – nincs szóköz az = körül!</span>\nnev=<span class=\"gr\">\"Vilmos\"</span>\nszam=<span class=\"gr\">42</span>\necho <span class=\"gr\">\"Szia, $nev! Szám: ${szam}.\"</span>\n\n<span class=\"cm\"># Speciális paraméterek</span>\n<span class=\"ye\">$0</span>    <span class=\"cm\"># script neve</span>\n<span class=\"ye\">$1</span> <span class=\"ye\">$2</span> <span class=\"cm\"># argumentumok</span>\n<span class=\"ye\">$#</span>    <span class=\"cm\"># argumentumok száma</span>\n<span class=\"ye\">$?</span>    <span class=\"cm\"># utolsó parancs exit kódja</span>\n<span class=\"ye\">$$</span>    <span class=\"cm\"># script PID-je</span>\n<span class=\"ye\">$@</span>    <span class=\"cm\"># összes argumentum (idézőjellel biztonságos)</span></pre></div>\n<h4>if / elif / else</h4>\n<div class=\"code-block\"><pre>if [[ <span class=\"ye\">$1</span> -gt 10 ]]; then\n  echo \"nagy\"\nelif [[ <span class=\"ye\">$1</span> -eq 10 ]]; then\n  echo \"tíz\"\nelse\n  echo \"kis\"\nfi\n\n<span class=\"cm\"># Fájlellenőrzések:</span>\n[[ <span class=\"ye\">-f</span> \"$1\" ]] && echo \"fájl\"    <span class=\"cm\"># -f: regular file</span>\n[[ <span class=\"ye\">-d</span> \"$1\" ]] && echo \"könyvtár\" <span class=\"cm\"># -d: directory</span>\n[[ <span class=\"ye\">-z</span> \"$v\" ]] && echo \"üres\"     <span class=\"cm\"># -z: zero length</span>\n[[ <span class=\"ye\">-n</span> \"$v\" ]] && echo \"nem üres\" <span class=\"cm\"># -n: non-zero</span></pre></div>\n<h4>Ciklusok</h4>\n<div class=\"code-block\"><pre><span class=\"cm\"># for – lista</span>\nfor x in alma korte szilva; do\n  echo \"$x\"\ndone\n\n<span class=\"cm\"># for – C-stílusú</span>\nfor ((i=1; i<=10; i++)); do echo $i; done\n\n<span class=\"cm\"># while</span>\nn=0\nwhile [[ $n -lt 5 ]]; do\n  echo $n; ((n++))\ndone\n\n<span class=\"cm\"># case</span>\ncase \"$1\" in\n  start) echo \"indul\" ;;\n  stop)  echo \"áll\"   ;;\n  *)     echo \"?\"     ;;\nesac</pre></div>\n<h4>Aritmetika</h4>\n<div class=\"code-block\"><pre>((x = 5 + 3))           <span class=\"cm\"># x = 8</span>\nresult=$((10 * 4))       <span class=\"cm\"># result = 40</span>\necho $((2**8))           <span class=\"cm\"># 256 (hatvány)</span>\n\n<span class=\"cm\"># Összehasonlítás (test / [[ ]]):</span>\n<span class=\"ye\">-eq</span> <span class=\"cm\">egyenlő</span>  <span class=\"ye\">-ne</span> <span class=\"cm\">nem egyenlő</span>\n<span class=\"ye\">-lt</span> <span class=\"cm\">kisebb</span>   <span class=\"ye\">-le</span> <span class=\"cm\">kisebb v. egyenlő</span>\n<span class=\"ye\">-gt</span> <span class=\"cm\">nagyobb</span>  <span class=\"ye\">-ge</span> <span class=\"cm\">nagyobb v. egyenlő</span></pre></div>",
+    "exercises": [
+      {
+        "type": "bash",
+        "q": "Írj bash scriptet, amely ellenőrzi az első argumentumot: ha üres, írja ki 'Hiba: adj meg egy nevet!' és lépjen ki 1-es kóddal!",
+        "hint": "-z feltétel üres stringre igaz. exit N parancs N kóddal lép ki.",
+        "placeholder": "#!/bin/bash\n",
+        "checks": [
+          {
+            "re": "#!\\s*/bin/bash",
+            "msg": "Hiányzik a shebang sor: #!/bin/bash"
+          },
+          {
+            "re": "\\[\\[.*-z.*\\$1|\\[\\[.*\\$#.*-eq.*0|\\[.*-z.*\\$1|if.*\\$#.*==.*0",
+            "msg": "Hiányzik az argumentum-ellenőrzés: if [[ -z \"$1\" ]] then ..."
+          },
+          {
+            "re": "echo",
+            "msg": "Hiányzik a hibaüzenet (echo)"
+          },
+          {
+            "re": "exit\\s+1",
+            "msg": "Hiányzik az exit 1 a hibás ágban"
+          }
+        ],
+        "ok": "Tökéletes! shebang + -z feltétel + echo + exit 1 – minden megvan."
+      },
+      {
+        "type": "bash",
+        "q": "Írj bash scriptet, amely az 1-től 10-ig terjedő PÁROS számokat írja ki, minden számot külön sorba!",
+        "hint": "for ciklus seq 2 2 10-zel, vagy for ((i=2; i<=10; i+=2)) szerkezettel.",
+        "placeholder": "#!/bin/bash\n",
+        "checks": [
+          {
+            "re": "for|while",
+            "msg": "Hiányzik a ciklus (for vagy while)"
+          },
+          {
+            "re": "echo",
+            "msg": "Hiányzik az echo a kiíráshoz"
+          },
+          {
+            "re": "seq\\s+2\\s+2|i\\+=\\s*2|i=i\\+2|\\(\\(.*\\+\\+.*\\+\\+|\\(\\(.*i.*2\\)\\)|step.*2",
+            "msg": "A lépésköznek 2-nek kell lennie (csak páros számok)"
+          }
+        ],
+        "ok": "Helyes! Páros számok ciklussal, 2-es lépésközzel."
+      },
+      {
+        "type": "mc",
+        "q": "Mi a különbség [ ] és [[ ]] között bash-ben?",
+        "opts": [
+          "Teljesen egyenértékűek",
+          "[[ ]] csak egész számokhoz való",
+          "[[ ]] bash-specifikus kibővítés: =~ regex, < > string összehasonlítás, nem kell levédeni a metakaraktereket",
+          "[ ] a modernebb szintaxis"
+        ],
+        "correct": 2,
+        "exp": "[[ ]] bash-beépített: =~ regex illesztés, < > string sorrend, és nem kell aggódni a szóközös változóknál sem (pl. [[ -z $var ]] vs [ -z \"$var\" ])."
+      },
+      {
+        "type": "mc",
+        "q": "Mit tárol a $? változó?",
+        "opts": [
+          "A script nevét",
+          "Az összes argumentumot",
+          "Az utolsó lefutott parancs visszatérési (exit) kódját",
+          "A script PID-jét"
+        ],
+        "correct": 2,
+        "exp": "$? = az utolsó parancs exit kódja. 0 = sikeres, >0 = hiba. if [ $? -ne 0 ]; then echo 'hiba'; fi – ez a klasszikus ellenőrzés."
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Állományrendszer",
+    "sub": "inode, jogosultságok, chmod, hard link, symlink, rendszerkönyvtárak",
+    "theory": "<h4>Az inode</h4>\n<p>Minden fájlhoz tartozik egy <b>inode</b> bejegyzés a fájlrendszerben. Ez tartalmazza a <b>metaadatokat</b>: méret, jogosultságok, tulajdonos, módosítási idő, lemezblokk-címek. A <b>fájlnév</b> egy könyvtárbejegyzés, amely az inode számra mutat – az inode nem tartalmazza a nevet!</p>\n<h4>Jogosultságok</h4>\n<div class=\"code-block\"><pre><span class=\"cm\">ls -l kimenete:</span>\n<span class=\"gr\">-rwxr-xr--</span> 2 user group 4096 jan 1 file.sh\n <span class=\"cy\">uuu</span><span class=\"ye\">ggg</span><span class=\"pu\">ooo</span>   <span class=\"cm\">(user / group / others)</span>\n\n<span class=\"cm\">r = olvasás (4)   w = írás (2)   x = végrehajtás (1)</span>\n<span class=\"cm\">rwx = 4+2+1 = 7   r-x = 4+0+1 = 5   r-- = 4+0+0 = 4</span></pre></div>\n<h4>chmod</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">chmod</span> <span class=\"ye\">755</span> <span class=\"gr\">script.sh</span>   <span class=\"cm\"># rwxr-xr-x</span>\n<span class=\"cy\">chmod</span> <span class=\"ye\">644</span> <span class=\"gr\">file.txt</span>    <span class=\"cm\"># rw-r--r--</span>\n<span class=\"cy\">chmod</span> <span class=\"ye\">u+x</span> <span class=\"gr\">file</span>        <span class=\"cm\"># user: végrehajtás +</span>\n<span class=\"cy\">chmod</span> <span class=\"ye\">go-w</span> <span class=\"gr\">file</span>       <span class=\"cm\"># group+others: írás -</span>\n<span class=\"cy\">chmod</span> <span class=\"ye\">a=r</span> <span class=\"gr\">file</span>        <span class=\"cm\"># mindenki: csak olvasás</span></pre></div>\n<h4>Hard link vs Symlink</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">ln</span> <span class=\"gr\">eredeti link</span>         <span class=\"cm\"># hard link – azonos inode!</span>\n<span class=\"cy\">ln</span> <span class=\"ye\">-s</span> <span class=\"gr\">eredeti link</span>     <span class=\"cm\"># symbolic link – mutató az eredetire</span></pre></div>\n<div class=\"note info\"><span>💡</span><p><b>Hard link:</b> az inode link-számlálója nő; az adat addig él, amíg van legalább egy hivatkozás. <b>Symlink:</b> csak az elérési utat tárolja; ha az eredeti törlődik → érvénytelen (dangling) link lesz.</p></div>\n<h4>Fontos rendszerkönyvtárak</h4>\n<div class=\"code-block\"><pre><span class=\"gr\">/bin</span>   <span class=\"cm\"># alapvető programok (ls, cp, bash...)</span>\n<span class=\"gr\">/sbin</span>  <span class=\"cm\"># adminisztrációs programok (mount, fsck...)</span>\n<span class=\"gr\">/etc</span>   <span class=\"cm\"># konfigurációs fájlok (/etc/passwd, /etc/fstab)</span>\n<span class=\"gr\">/home</span>  <span class=\"cm\"># felhasználók home könyvtárai</span>\n<span class=\"gr\">/tmp</span>   <span class=\"cm\"># ideiglenes fájlok (újraindítás után törlődhet)</span>\n<span class=\"gr\">/var</span>   <span class=\"cm\"># változó adatok (logok: /var/log, mail, spool)</span>\n<span class=\"gr\">/proc</span>  <span class=\"cm\"># virtuális fs – kernel és folyamat info</span>\n<span class=\"gr\">/dev</span>   <span class=\"cm\"># eszközfájlok (sda, tty, null, urandom)</span>\n<span class=\"gr\">/usr</span>   <span class=\"cm\"># felhasználói programok, lib-ek, man oldalak</span></pre></div>",
+    "exercises": [
+      {
+        "type": "cmd",
+        "q": "Állítsd be a script.sh jogosultságait: a tulajdonos mindent tehet (rwx); mások csak olvashatnak (r--)!",
+        "hint": "744 oktálisan: user=rwx(7), group=r--(4), others=r--(4)",
+        "placeholder": "chmod ...",
+        "accepted": [
+          "chmod 744 script.sh",
+          "chmod u=rwx,go=r script.sh",
+          "chmod u=rwx,g=r,o=r script.sh"
+        ],
+        "ok": "Tökéletes! 744 = owner:rwx(7), group:r(4), others:r(4).",
+        "err": "Helyes forma: chmod 744 script.sh – 7=rwx tulajdonosnak, 4=r-- a többieknek."
+      },
+      {
+        "type": "cmd",
+        "q": "Hozz létre szimbolikus linket: ~/shortcuts/docs mutasson a ~/Documents könyvtárra!",
+        "hint": "ln -s FORRÁS LINK_NÉV – a forrás ~/Documents, a link neve ~/shortcuts/docs.",
+        "placeholder": "ln ...",
+        "accepted": [
+          "ln -s ~/Documents ~/shortcuts/docs",
+          "ln -s $HOME/Documents $HOME/shortcuts/docs",
+          "ln -s ~/Documents/ ~/shortcuts/docs"
+        ],
+        "ok": "Helyes! Az -s flag symlinket hoz létre – egy mutatót az eredeti könyvtárra.",
+        "err": "Helyes forma: ln -s ~/Documents ~/shortcuts/docs"
+      },
+      {
+        "type": "mc",
+        "q": "Mi a különbség a hard link és a szimbolikus (soft) link között?",
+        "opts": [
+          "Csak a nevük különbözik",
+          "Hard link: azonos inode, az eredeti törlése után is él az adat; Symlink: mutató az elérési útra, az eredeti törlése után érvénytelen",
+          "Symlink azonos inode-on osztozik",
+          "Hard link csak könyvtárakra alkalmazható"
+        ],
+        "correct": 1,
+        "exp": "Hard link: az inode link-számlálója nő; az adat addig él, amíg van legalább egy link. Symlink: csak a nevet tárolja – ha az eredeti törlődik, dangling link lesz."
+      },
+      {
+        "type": "mc",
+        "q": "Melyik könyvtárban találhatók a rendszerkonfigurációs fájlok Linux-on?",
+        "opts": [
+          "/bin",
+          "/home",
+          "/etc",
+          "/var"
+        ],
+        "correct": 2,
+        "exp": "/etc tartalmazza a konfigurációs fájlokat: /etc/passwd (felhasználók), /etc/hostname, /etc/fstab (fájlrendszer csatolások), /etc/crontab stb."
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Folyamatok alapjai",
+    "sub": "Program vs folyamat, PID/PPID, állapotok, task_struct, zombie",
+    "theory": "<h4>Program vs Folyamat</h4>\n<p>A <b>program</b> egy lemezen lévő végrehajtható fájl (statikus). A <b>folyamat</b> egy futó program példánya (dinamikus) – saját memóriaterülettel, fájlleírókkal, PID-del rendelkezik.</p>\n<h4>task_struct – a folyamat leírója</h4>\n<p>A Linux kernel minden folyamatot egy <code>task_struct</code> C struktúrában tart nyilván. Tartalmazza:</p>\n<ul>\n<li><b>PID</b> – egyedi folyamatazonosító</li>\n<li><b>PPID</b> – szülő folyamat PID-je</li>\n<li><b>Állapot</b> – RUNNING, SLEEPING, ZOMBIE...</li>\n<li>Memória-leíró (mm_struct), fájlleíró tábla, signal maszk, ütemező adatok</li>\n</ul>\n<h4>Folyamatállapotok</h4>\n<div class=\"code-block\"><pre><span class=\"gr\">R – Running</span>    <span class=\"cm\"># fut vagy futásra kész (CPU-n van)</span>\n<span class=\"cy\">S – Sleeping</span>   <span class=\"cm\"># eseményre vár – megszakítható</span>\n<span class=\"cy\">D – Sleeping</span>   <span class=\"cm\"># megszakíthatatlan (pl. lemez I/O)</span>\n<span class=\"ye\">T – Stopped</span>    <span class=\"cm\"># SIGSTOP-pal leállítva (Ctrl+Z)</span>\n<span class=\"re\">Z – Zombie</span>     <span class=\"cm\"># befejezte, szülő még nem olvasta ki exit kódot</span></pre></div>\n<h4>Hasznos parancsok</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">ps</span> <span class=\"ye\">aux</span>          <span class=\"cm\"># összes folyamat részletesen</span>\n<span class=\"cy\">ps</span> <span class=\"ye\">-ef</span>          <span class=\"cm\"># Unix formátum, PPID is látható</span>\n<span class=\"cy\">top</span> / <span class=\"cy\">htop</span>      <span class=\"cm\"># élő figyelő</span>\n<span class=\"cy\">kill</span> <span class=\"ye\">-9</span> PID     <span class=\"cm\"># SIGKILL – azonnali leállítás</span>\n<span class=\"cy\">kill</span> <span class=\"ye\">-15</span> PID    <span class=\"cm\"># SIGTERM – elegáns leállítás kérése</span>\n<span class=\"cy\">pgrep</span> <span class=\"gr\">bash</span>      <span class=\"cm\"># bash nevű folyamatok PID-jei</span>\n<span class=\"cy\">pstree</span>          <span class=\"cm\"># folyamat-fa</span></pre></div>\n<div class=\"note warn\"><span>⚠</span><p><b>Zombie folyamat:</b> nem fogyaszt CPU-t, de tartja a PID-et a folyamattáblában. Megoldás: a szülő hívjon wait()-et!</p></div>",
+    "exercises": [
+      {
+        "type": "cmd",
+        "q": "Listázd ki az összes futó folyamatot úgy, hogy a PID és a PPID (szülő PID) is látszódjon!",
+        "hint": "A ps -ef Unix formátum tartalmazza a PPID oszlopot is.",
+        "placeholder": "ps ...",
+        "accepted": [
+          "ps -ef",
+          "ps ef",
+          "ps -e -f"
+        ],
+        "ok": "Helyes! ps -ef: UID, PID, PPID, C, STIME, TTY, TIME, CMD – mind látható.",
+        "err": "Helyes forma: ps -ef – ez a Unix formátum, ami tartalmazza a PPID-et."
+      },
+      {
+        "type": "mc",
+        "q": "Mi az a zombie folyamat?",
+        "opts": [
+          "Végtelen ciklusban futó, 100%-os CPU-t emésztő folyamat",
+          "Befejezett folyamat, amelynek exit kódját a szülő még nem olvasta ki (wait())",
+          "Ctrl+Z-vel leállított folyamat (Stopped állapot)",
+          "Kernel folyamat, amely memóriaszivárgást okoz"
+        ],
+        "correct": 1,
+        "exp": "Zombie (Z állapot): már befejezte, de bejegyzése megmarad a folyamattáblában, mert a szülő még nem hívott wait()-et. Nem fogyaszt CPU-t, de foglalja a PID-et."
+      },
+      {
+        "type": "mc",
+        "q": "Mi a különbség a SIGKILL (-9) és a SIGTERM (-15) között?",
+        "opts": [
+          "Semmiben, mindkettő azonnal leállítja a folyamatot",
+          "SIGTERM elegáns leállítást kér (a program elkaphatja és saját maga lép ki); SIGKILL azonnali és elfoghatatlan",
+          "SIGKILL csak szuperusernek elérhető",
+          "SIGTERM töröl, SIGKILL szüneteltet"
+        ],
+        "correct": 1,
+        "exp": "SIGTERM (15): a folyamat elkaphatja, megcsinálhatja a cleanup-ot (zárt fájlok, mentés). SIGKILL (9): kernel szinten azonnali, a folyamat nem kapja el – nem ad esélyt a tisztításra."
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "title": "Folyamatkezelés C-ben",
+    "sub": "fork(), getpid(), exit(), _exit(), wait(), waitpid()",
+    "theory": "<h4>fork() – folyamat klónozása</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">#include &lt;unistd.h&gt;</span>\n<span class=\"ye\">#include &lt;sys/wait.h&gt;</span>\n<span class=\"ye\">#include &lt;stdio.h&gt;</span>\n\n<span class=\"cy\">pid_t</span> pid = <span class=\"gr\">fork()</span>;\n\nif (pid <span class=\"re\">&lt; 0</span>) {\n    perror(\"fork hiba\"); return 1;\n} else if (pid <span class=\"re\">== 0</span>) {\n    <span class=\"cm\">/* GYEREK – fork() értéke: 0 */</span>\n    printf(\"Gyerek PID: %d, szülő: %d\\n\",\n           <span class=\"cy\">getpid()</span>, <span class=\"cy\">getppid()</span>);\n    <span class=\"gr\">_exit(0)</span>;   <span class=\"cm\">// _exit: nincs flush, biztonságosabb fork után</span>\n} else {\n    <span class=\"cm\">/* SZÜLŐ – fork() értéke: gyerek PID-je */</span>\n    printf(\"Szülő PID: %d\\n\", <span class=\"cy\">getpid()</span>);\n    <span class=\"gr\">wait(NULL)</span>;  <span class=\"cm\">// zombie elkerülése!</span>\n}</pre></div>\n<div class=\"note info\"><span>💡</span><p><b>fork() visszatérési értéke:</b> szülőben = gyerek PID-je (&gt;0), gyerekben = 0, hiba esetén = -1.</p></div>\n<h4>exit() vs _exit()</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">exit(0)</span>    <span class=\"cm\"># stdio buffereket flush-ol, atexit() függvényeket hív</span>\n<span class=\"cy\">_exit(0)</span>   <span class=\"cm\"># azonnal visszatér a kernelbe – fork() után ajánlott</span></pre></div>\n<h4>wait() és waitpid()</h4>\n<div class=\"code-block\"><pre><span class=\"cy\">pid_t</span> ret = <span class=\"gr\">wait(&status)</span>;               <span class=\"cm\"># bármely gyerekre</span>\n<span class=\"cy\">pid_t</span> ret = <span class=\"gr\">waitpid(pid, &status, 0)</span>;   <span class=\"cm\"># konkrét gyerekre</span>\n\n<span class=\"cm\"># status vizsgálata:</span>\nif (WIFEXITED(status))\n    printf(\"exit kód: %d\\n\", WEXITSTATUS(status));</pre></div>",
+    "exercises": [
+      {
+        "type": "c",
+        "q": "Írj C programot, amely fork()-kal létrehoz egy gyerekfolyamatot. A gyerek írja ki a saját PID-jét, a szülő várja meg a gyereket (wait), majd írja ki: 'Gyerek befejezte'!",
+        "hint": "fork() visszatérése: gyerekben 0, szülőben a gyerek PID-je. wait(NULL) megvárja bármelyik gyereket.",
+        "placeholder": "#include <stdio.h>\n#include <unistd.h>\n#include <sys/wait.h>\n\nint main() {\n    \n}",
+        "checks": [
+          {
+            "re": "fork\\s*\\(",
+            "msg": "Hiányzik a fork() hívás"
+          },
+          {
+            "re": "pid\\s*==\\s*0|pid\\s*<\\s*1",
+            "msg": "Hiányzik a pid==0 feltétel (gyerek ág azonosítása)"
+          },
+          {
+            "re": "getpid\\s*\\(",
+            "msg": "Hiányzik a getpid() – a PID kiírásához kell"
+          },
+          {
+            "re": "wait\\s*\\(",
+            "msg": "Hiányzik a wait() a szülő ágban – zombie elkerülése!"
+          }
+        ],
+        "ok": "Tökéletes! fork() + pid==0 gyerek-ág + getpid() + wait() – minden szükséges elem megvan."
+      },
+      {
+        "type": "mc",
+        "q": "Mi a fork() visszatérési értéke a gyerekfolyamatban?",
+        "opts": [
+          "A szülő PID-je",
+          "A gyerek saját PID-je",
+          "0",
+          "-1"
+        ],
+        "correct": 2,
+        "exp": "fork() visszatér: szülőben = gyerek PID-je (>0), gyerekben = 0, hiba esetén -1. Ezért: if (pid == 0) { /* gyerek */ } else if (pid > 0) { /* szülő */ }"
+      },
+      {
+        "type": "mc",
+        "q": "Miért érdemes _exit() helyett exit()-et kerülni fork() utáni gyerekfolyamatban?",
+        "opts": [
+          "Az exit() lassabb",
+          "Az exit() flush-olja az stdio buffereket és hívja az atexit() függvényeket – dupla flush és dupla cleanup problémát okozhat a szülővel megosztott buffereken",
+          "Az exit() nem létezik C-ben",
+          "Az _exit() nagyobb exit kódot kezel"
+        ],
+        "correct": 1,
+        "exp": "fork() után a gyerek örökli a szülő stdio buffereit. Ha exit()-et hív, flush-olhatja a szülőhöz tartozó kimenetet is. _exit() azonnal kilép a kernelbe, buffer érintése nélkül."
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "title": "Pipe C-ben",
+    "sub": "pipe(), read(), write(), close() – szülő-gyerek kommunikáció",
+    "theory": "<h4>A pipe felépítése</h4>\n<div class=\"code-block\"><pre><span class=\"cm\">// pfd[0] = olvasóvég    pfd[1] = írásovég</span>\n<span class=\"cy\">SZÜLŐ ír → pfd[1]</span> ──────→ <span class=\"gr\">pfd[0] → olvas a GYEREK</span>\n\nint pfd[2];\n<span class=\"gr\">pipe(pfd)</span>;   <span class=\"cm\">// létrehozza a két fájlleírót</span></pre></div>\n<h4>Szülő → Gyerek kommunikáció</h4>\n<div class=\"code-block\"><pre\">#include &lt;unistd.h&gt;\n\nint pfd[2];\npipe(pfd);\npid_t pid = fork();\n\nif (pid == 0) {           <span class=\"cm\">/* GYEREK: olvas */</span>\n    <span class=\"re\">close(pfd[1])</span>;          <span class=\"cm\">// írásóvéget ZÁRJA LE!</span>\n    char buf[100];\n    int n = <span class=\"gr\">read(pfd[0], buf, sizeof(buf))</span>;\n    buf[n] = '\\0';\n    printf(\"Kaptam: %s\\n\", buf);\n    <span class=\"re\">close(pfd[0])</span>;\n    _exit(0);\n} else {                  <span class=\"cm\">/* SZÜLŐ: ír */</span>\n    <span class=\"re\">close(pfd[0])</span>;          <span class=\"cm\">// olvasóvéget ZÁRJA LE!</span>\n    <span class=\"gr\">write(pfd[1], \"Hello!\", 6)</span>;\n    <span class=\"re\">close(pfd[1])</span>;          <span class=\"cm\">// EOF jel a gyereknek</span>\n    wait(NULL);\n}</pre></div>\n<div class=\"note warn\"><span>⚠</span><p><b>Kritikus:</b> mindig zárd le a pipe véget, amelyiket nem használod! Ha az írásóvéget nyitva hagyod, az olvasó soha nem kap EOF-t és örökké blokkolni fog.</p></div>\n<h4>Termelő/fogyasztó elv</h4>\n<ul>\n<li>Ha a pipe <b>teli</b>: az írás blokkolódik, amíg valaki nem olvas</li>\n<li>Ha a pipe <b>üres</b>: az olvasás blokkolódik, amíg valaki nem ír</li>\n<li>Ha az összes írásóvég <b>le van zárva</b>: read() 0-t ad vissza (EOF)</li>\n<li>Ha az összes olvasóvég <b>le van zárva</b>: write() SIGPIPE-t küld</li>\n</ul>",
+    "exercises": [
+      {
+        "type": "mc",
+        "q": "A pipe(pfd) hívás után melyik fájlleíróba kell írni?",
+        "opts": [
+          "pfd[0]-ba",
+          "pfd[1]-be",
+          "Mindkettőbe lehet írni",
+          "Mindegy, a pipe szimmetrikus"
+        ],
+        "correct": 1,
+        "exp": "Konvenció: pfd[1] = write end (írásovég), pfd[0] = read end (olvasóvég). Adatfolyam: pfd[1] → pipe puffer → pfd[0]."
+      },
+      {
+        "type": "c",
+        "q": "Egészítsd ki a kódot: a szülő küldjön egy egész számot a gyereknek pipe-on, a gyerek írja ki a kétszeresét! (write/read sizeof(int) méretű adatot)",
+        "hint": "write(pfd[1], &szam, sizeof(int)) és read(pfd[0], &kapott, sizeof(int)) – egész szám mérete.",
+        "placeholder": "#include <stdio.h>\n#include <unistd.h>\n#include <sys/wait.h>\n\nint main() {\n    int pfd[2];\n    pipe(pfd);\n    int szam = 21;\n    pid_t pid = fork();\n    if (pid == 0) {\n        // gyerek – olvas és kétszeresét írja ki\n        \n    } else {\n        // szülő – elküldi a számot\n        \n    }\n    return 0;\n}",
+        "checks": [
+          {
+            "re": "close\\s*\\(\\s*pfd\\s*\\[\\s*1\\s*\\]",
+            "msg": "A gyereknek le kell zárnia a pfd[1]-et: close(pfd[1])"
+          },
+          {
+            "re": "read\\s*\\(\\s*pfd\\s*\\[\\s*0\\s*\\]",
+            "msg": "A gyereknek olvasnia kell a pfd[0]-ból: read(pfd[0], ...)"
+          },
+          {
+            "re": "close\\s*\\(\\s*pfd\\s*\\[\\s*0\\s*\\]",
+            "msg": "A szülőnek le kell zárnia a pfd[0]-t: close(pfd[0])"
+          },
+          {
+            "re": "write\\s*\\(\\s*pfd\\s*\\[\\s*1\\s*\\]",
+            "msg": "A szülőnek írnia kell a pfd[1]-be: write(pfd[1], &szam, sizeof(int))"
+          },
+          {
+            "re": "\\*\\s*2|<<\\s*1|kapott\\s*\\*|2\\s*\\*\\s*kapott|kétszer|ketszer",
+            "msg": "A gyereknek a kétszeresét kell kiírnia (pl. kapott * 2)"
+          }
+        ],
+        "ok": "Tökéletes! close() a nem használt végeken + write + read + kétszeres számítás – mind megvan."
+      },
+      {
+        "type": "mc",
+        "q": "Mi történik, ha a gyerekfolyamat nem zárja le az írásóvéget (pfd[1]) a pipe-ból?",
+        "opts": [
+          "Semmi különös",
+          "A gyerek read() hívása soha nem kap EOF-t és örökké blokkolni fog, mert az írásóvég nyitva marad",
+          "A write() hiba nélkül folytatódik",
+          "A szülő is blokkolódik az írásban"
+        ],
+        "correct": 1,
+        "exp": "Az EOF (end-of-file) akkor érkezik a read()-nek, ha az összes írásóvég le van zárva. Ha a gyerek megtartja a pfd[1]-et, a read() örökre vár – deadlock!"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "title": "exec függvénycsalád",
+    "sub": "execl execv execlp execvp execle execve – másik program futtatása",
+    "theory": "<h4>Mi az exec?</h4>\n<p>Az <code>exec</code> lecseréli az aktuális folyamat programját egy másik programra. <b>Nem hoz létre új folyamatot</b> – ugyanaz a PID marad, de a kód, adat, stack teljesen felülíródik az új programmal.</p>\n<div class=\"note warn\"><span>⚠</span><p><b>exec CSAK hiba esetén tér vissza!</b> Ha sikeres, az aktuális kód folytatása soha nem hajtódik végre.</p></div>\n<h4>A névcsoport logikája</h4>\n<div class=\"code-block\"><pre><span class=\"cm\">// l = list   (argumentumok felsorolva, NULL-lal zárva)</span>\n<span class=\"cm\">// v = vector (argumentumok char* tömbként)</span>\n<span class=\"cm\">// p = path   (PATH-ban keresi a programot)</span>\n<span class=\"cm\">// e = env    (egyéni környezeti változók)</span>\n\n<span class=\"cy\">execl</span> (<span class=\"gr\">\"/bin/ls\"</span>, <span class=\"gr\">\"ls\"</span>, <span class=\"gr\">\"-la\"</span>, <span class=\"re\">NULL</span>);\n<span class=\"cy\">execlp</span>(<span class=\"gr\">\"ls\"</span>,      <span class=\"gr\">\"ls\"</span>, <span class=\"gr\">\"-la\"</span>, <span class=\"re\">NULL</span>);   <span class=\"cm\">// PATH-ban keres</span>\n\nchar *args[] = { <span class=\"gr\">\"ls\"</span>, <span class=\"gr\">\"-la\"</span>, <span class=\"re\">NULL</span> };\n<span class=\"cy\">execv</span> (<span class=\"gr\">\"/bin/ls\"</span>, args);\n<span class=\"cy\">execvp</span>(<span class=\"gr\">\"ls\"</span>,      args);                <span class=\"cm\">// PATH-ban keres</span>\n\nchar *env[] = { <span class=\"gr\">\"PATH=/bin\"</span>, <span class=\"re\">NULL</span> };\n<span class=\"cy\">execle</span>(<span class=\"gr\">\"/bin/ls\"</span>, <span class=\"gr\">\"ls\"</span>, <span class=\"re\">NULL</span>, env);   <span class=\"cm\">// saját env</span>\n<span class=\"cy\">execve</span>(<span class=\"gr\">\"/bin/ls\"</span>, args, env);          <span class=\"cm\">// saját env + vector</span></pre></div>\n<h4>fork + exec – a klasszikus minta</h4>\n<div class=\"code-block\"><pre>pid_t pid = <span class=\"gr\">fork()</span>;\nif (pid == 0) {\n    <span class=\"cm\">/* gyerekfolyamat – lefuttatja az új programot */</span>\n    <span class=\"cy\">execlp</span>(<span class=\"gr\">\"ls\"</span>, <span class=\"gr\">\"ls\"</span>, <span class=\"gr\">\"-la\"</span>, <span class=\"re\">NULL</span>);\n    perror(\"exec hiba\");   <span class=\"cm\">// ide csak hiba esetén jut</span>\n    _exit(1);\n} else {\n    <span class=\"gr\">wait(NULL)</span>;            <span class=\"cm\">// szülő megvárja</span>\n}</pre></div>",
+    "exercises": [
+      {
+        "type": "mc",
+        "q": "Mi a különbség az execl és az execlp között?",
+        "opts": [
+          "Az execl gyorsabb",
+          "Az execl teljes elérési utat vár (/bin/ls), az execlp a PATH-ban is megkeresi a programot",
+          "Az execlp tömböt vár, az execl listát",
+          "Az execlp új folyamatot hoz létre"
+        ],
+        "correct": 1,
+        "exp": "A 'p' suffix = PATH keresés. execlp('ls',...) megkeresi az ls-t a PATH könyvtáraiban. execl('/bin/ls',...) csak az abszolút elérési utat fogadja el."
+      },
+      {
+        "type": "c",
+        "q": "Írj C programot, amely fork() után a gyerekfolyamatban futtatja a 'date' parancsot execlp-vel! A szülő várja meg a gyereket.",
+        "hint": "execlp('date', 'date', NULL) – az első arg a program neve, a többi az argv[], mindig NULL-lal zárul.",
+        "placeholder": "#include <stdio.h>\n#include <unistd.h>\n#include <sys/wait.h>\n\nint main() {\n    \n}",
+        "checks": [
+          {
+            "re": "fork\\s*\\(",
+            "msg": "Hiányzik a fork() hívás"
+          },
+          {
+            "re": "pid\\s*==\\s*0",
+            "msg": "Hiányzik a pid==0 feltétel (gyerek ág)"
+          },
+          {
+            "re": "execlp\\s*\\(\\s*[\\\"']date[\\\"']|execvp\\s*\\(\\s*[\\\"']date[\\\"']",
+            "msg": "Hiányzik az execlp('date','date',NULL) vagy execvp hívás"
+          },
+          {
+            "re": "wait\\s*\\(",
+            "msg": "Hiányzik a wait(NULL) a szülő ágban"
+          }
+        ],
+        "ok": "Tökéletes! fork() + pid==0 + execlp('date',...) + wait() – a klasszikus külső program futtatási minta."
+      },
+      {
+        "type": "mc",
+        "q": "Miért kell a NULL az exec argumentumlista végére?",
+        "opts": [
+          "Csak szintaxis, nem kötelező",
+          "Az exec a NULL-t használja a lista végének jelzéseként (C-ben nincs más mód a hossz átadására)",
+          "A NULL megakadályozza a memóriaszivárgást",
+          "Csak execl-ben kell, execv-ben nem"
+        ],
+        "correct": 1,
+        "exp": "A C-ben a függvénynek tudnia kell, hol ér véget az argumentumlista. Mivel nincs beépített hossz, a NULL (= 0 értékű mutató) jelzi a listazárást. argv[argc] is mindig NULL a main()-ben."
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "title": "Folyamatok közti kommunikáció",
+    "sub": "Signals, fájl, pipe, FIFO, szemafor, shared mem, socket – popen/pclose",
+    "theory": "<h4>IPC módszerek áttekintése</h4>\n<div class=\"code-block\"><pre><span class=\"gr\">Signals</span>          <span class=\"cm\">→ kevés info, figyelmeztetés/megszakítás</span>\n<span class=\"gr\">Fájlok</span>           <span class=\"cm\">→ egyszerű, de lassú + szinkronizálási probléma</span>\n<span class=\"gr\">Pipe (névtelen)</span>  <span class=\"cm\">→ szülő-gyerek közt, egyirányú, FIFO</span>\n<span class=\"gr\">FIFO (named)</span>    <span class=\"cm\">→ bármely folyamat, névvel azonosítható</span>\n<span class=\"gr\">Szemafor</span>         <span class=\"cm\">→ szinkronizáció, kölcsönös kizárás</span>\n<span class=\"gr\">Message queue</span>    <span class=\"cm\">→ üzenetcsomók, típus szerint szűrhető</span>\n<span class=\"gr\">Shared memory</span>    <span class=\"cm\">→ leggyorsabb: közös memóriaterület</span>\n<span class=\"gr\">Socket</span>           <span class=\"cm\">→ hálózaton át is (TCP/UDP/UNIX domain)</span></pre></div>\n<h4>popen / pclose</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">#include &lt;stdio.h&gt;</span>\n\n<span class=\"cm\">// Külső parancs kimenetét olvassuk:</span>\n<span class=\"cy\">FILE</span> *fp = <span class=\"gr\">popen(\"ls -la\", \"r\")</span>;\nchar buf[256];\nwhile (<span class=\"cy\">fgets(buf, sizeof(buf), fp)</span>)\n    printf(\"%s\", buf);\n<span class=\"gr\">pclose(fp)</span>;     <span class=\"cm\">// lezár + wait()</span>\n\n<span class=\"cm\">// Külső parancs bemenetét írjuk:</span>\n<span class=\"cy\">FILE</span> *fp2 = <span class=\"gr\">popen(\"wc -l\", \"w\")</span>;\nfprintf(fp2, \"sor1\\nsor2\\n\");\n<span class=\"gr\">pclose(fp2)</span>;</pre></div>\n<div class=\"note info\"><span>💡</span><p><b>popen háttere:</b> automatikusan elvégzi a pipe()+fork()+exec() kombinációt. Egyszerűbb mint a nyers pipe() kezelés, de csak egyirányú.</p></div>",
+    "exercises": [
+      {
+        "type": "mc",
+        "q": "Mikor érdemes popen()-t használni pipe() helyett?",
+        "opts": [
+          "Soha – a popen() elavult",
+          "Ha shell parancs kimenetét akarjuk olvasni (vagy bemenetét írni) FILE* streamen, anélkül hogy manuálisan kezelnénk pipe+fork+exec-et",
+          "Csak ha a pipe() nem sikerül",
+          "Ha két gyerekfolyamat között kell kommunikálni"
+        ],
+        "correct": 1,
+        "exp": "A popen() kényelmes absztrakció: automatikusan pipe()+fork()+exec()-et végez. Hátránya: csak egyirányú, és a parancs shell-en fut át (biztonsági szempont változó parancsban)."
+      },
+      {
+        "type": "c",
+        "q": "Írj C kódrészletet, amely popen()-nel futtatja a 'date' parancsot, soronként beolvassa a kimenetét és kiírja a stdout-ra!",
+        "hint": "popen('date', 'r') visszaad egy FILE*-t. fgets(buf, sizeof(buf), fp) soronként olvas. pclose(fp) a végén.",
+        "placeholder": "#include <stdio.h>\n\nint main() {\n    char buf[256];\n    \n    return 0;\n}",
+        "checks": [
+          {
+            "re": "popen\\s*\\(\\s*[\\\"']date[\\\"']",
+            "msg": "Hiányzik a popen('date', 'r') hívás"
+          },
+          {
+            "re": "fgets\\s*\\(|fread\\s*\\(|fscanf\\s*\\(",
+            "msg": "Hiányzik a beolvasás (fgets vagy hasonló)"
+          },
+          {
+            "re": "printf\\s*\\(|puts\\s*\\(|fputs\\s*\\(",
+            "msg": "Hiányzik a kiírás (printf/puts)"
+          },
+          {
+            "re": "pclose\\s*\\(",
+            "msg": "Hiányzik a pclose() – ez zárja le és várja meg a gyerekfolyamatot"
+          }
+        ],
+        "ok": "Tökéletes! popen() → fgets() loop → pclose() – ez a klasszikus minta."
+      },
+      {
+        "type": "mc",
+        "q": "Melyik IPC módszer a leggyorsabb?",
+        "opts": [
+          "Pipe",
+          "FIFO",
+          "Shared memory (osztott memória)",
+          "Socket"
+        ],
+        "correct": 2,
+        "exp": "A shared memory a leggyorsabb IPC: a folyamatok közvetlenül olvasnak/írnak egy közös memóriaterületen, nincs kernel-másolás. Hátránya: külön szinkronizálás kell (szemafor)."
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "title": "FIFO / Named Pipe",
+    "sub": "mkfifo, open, read, write, close, unlink – bármely folyamatok közt",
+    "theory": "<h4>Mi a FIFO?</h4>\n<p>A FIFO (névvel ellátott pipe) különleges fájl, amely <b>megőrzi a pipe tulajdonságait</b>, de szimbolikus névvel rendelkezik – így bármely két folyamat (nem csak szülő-gyerek) kommunikálhat rajta keresztül.</p>\n<div class=\"code-block\"><pre><span class=\"cm\">ls -l /tmp/myfifo:</span>\n<span class=\"gr\">prw-r--r--</span> 1 user group 0 jan 1 myfifo\n<span class=\"ye\">^</span>\n<span class=\"ye\">p</span> = pipe típus (FIFO fájl)</pre></div>\n<h4>Létrehozás és használat</h4>\n<div class=\"code-block\"><pre><span class=\"ye\">#include &lt;sys/stat.h&gt;</span>   <span class=\"cm\">// mkfifo</span>\n<span class=\"ye\">#include &lt;fcntl.h&gt;</span>      <span class=\"cm\">// open flags</span>\n<span class=\"ye\">#include &lt;unistd.h&gt;</span>     <span class=\"cm\">// read, write, close, unlink</span>\n\n<span class=\"cm\">// Létrehozás:</span>\n<span class=\"gr\">mkfifo(\"/tmp/myfifo\", 0666)</span>;\n\n<span class=\"cm\">// ÍRÁS (producer folyamat):</span>\nint fd = <span class=\"gr\">open(\"/tmp/myfifo\", O_WRONLY)</span>;  <span class=\"cm\">// blokkolódik amíg olvasó nincs</span>\n<span class=\"gr\">write(fd, \"adat\", 4)</span>;\n<span class=\"gr\">close(fd)</span>;\n\n<span class=\"cm\">// OLVASÁS (consumer folyamat):</span>\nint fd = <span class=\"gr\">open(\"/tmp/myfifo\", O_RDONLY)</span>;  <span class=\"cm\">// blokkolódik amíg író nincs</span>\nchar buf[100];\n<span class=\"gr\">read(fd, buf, sizeof(buf))</span>;\n<span class=\"gr\">close(fd)</span>;\n\n<span class=\"cm\">// Törlés:</span>\n<span class=\"gr\">unlink(\"/tmp/myfifo\")</span>;</pre></div>\n<h4>O_NONBLOCK és kliens-szerver modell</h4>\n<div class=\"code-block\"><pre><span class=\"cm\">// O_NONBLOCK: nem blokkolódik</span>\nopen(\"/tmp/f\", O_RDONLY | <span class=\"ye\">O_NONBLOCK</span>);  <span class=\"cm\">// azonnal</span>\nopen(\"/tmp/f\", O_WRONLY | <span class=\"ye\">O_NONBLOCK</span>);  <span class=\"cm\">// -1 ha nincs olvasó</span></pre></div>\n<div class=\"note info\"><span>🔄</span><p><b>Kliens-szerver minta:</b> Server létrehozza a <code>server_fifo</code>-t. Kliens létrehozza saját <code>fifo_&lt;PID&gt;</code>-jét, beleírja a kérést + saját PID-jét. Server feldolgozza, megnyitja a kliens FIFO-ját, visszaírja a választ.</p></div>",
+    "exercises": [
+      {
+        "type": "cmd",
+        "q": "Hozz létre egy FIFO fájlt /tmp/sajatfifo névvel parancssorból!",
+        "hint": "A mkfifo parancs létrehozza a named pipe-ot.",
+        "placeholder": "mkfifo ...",
+        "accepted": [
+          "mkfifo /tmp/sajatfifo"
+        ],
+        "ok": "Helyes! A mkfifo FIFO speciális fájlt hoz létre – az ls -l-ben 'p' fájltípusként jelenik meg.",
+        "err": "Helyes forma: mkfifo /tmp/sajatfifo"
+      },
+      {
+        "type": "mc",
+        "q": "Mi történik, ha O_NONBLOCK nélkül nyitjuk meg írásra a FIFO-t, de még nincs olvasója?",
+        "opts": [
+          "Hibaüzenetet ad vissza azonnal (-1)",
+          "A hívás blokkolódik (vár), amíg egy másik folyamat meg nem nyitja olvasásra",
+          "Létrehozza az adatot és folytatja",
+          "SIGPIPE jelet küld azonnal"
+        ],
+        "correct": 1,
+        "exp": "FIFO open() alapértelmezetten blokkolódik: az írásra nyitás vár amíg van olvasója (és fordítva). Ez szinkronizációs pontot jelent. O_NONBLOCK-kal az írásra nyitás -1-et ad vissza ENXIO hibával, ha nincs olvasó."
+      },
+      {
+        "type": "c",
+        "q": "Írj C kódot (az írói oldalt): hozd létre a /tmp/testfifo FIFO-t, nyisd meg írásra, küld el a 'Hello FIFO' stringet, majd zárd le és töröld!",
+        "hint": "mkfifo() → open(O_WRONLY) → write() → close() → unlink()",
+        "placeholder": "#include <stdio.h>\n#include <fcntl.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <string.h>\n\nint main() {\n    \n    return 0;\n}",
+        "checks": [
+          {
+            "re": "mkfifo\\s*\\(\\s*[\\\"']/tmp/testfifo[\\\"']",
+            "msg": "Hiányzik a mkfifo('/tmp/testfifo', 0666) hívás"
+          },
+          {
+            "re": "open\\s*\\(.*O_WRONLY",
+            "msg": "Hiányzik az open(..., O_WRONLY) hívás"
+          },
+          {
+            "re": "write\\s*\\(.*[Hh]ello",
+            "msg": "Hiányzik a write() a 'Hello FIFO' szöveggel"
+          },
+          {
+            "re": "close\\s*\\(",
+            "msg": "Hiányzik a close(fd) hívás"
+          },
+          {
+            "re": "unlink\\s*\\(\\s*[\\\"']/tmp/testfifo[\\\"']",
+            "msg": "Hiányzik az unlink('/tmp/testfifo') törlés"
+          }
+        ],
+        "ok": "Tökéletes! mkfifo → open(O_WRONLY) → write → close → unlink – teljes írói oldal megvan."
+      }
+    ]
+  }
 ];
 
-// ══════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════
-let cur=0;
-const prog=JSON.parse(localStorage.getItem('lx_prog')||'{}');
-const eds={};
+const ED={};
+let CUR=0;
+const PROG=JSON.parse(localStorage.getItem('lxp')||'{}');
 
-// ══════════════════════════════════════════════════
-//  BUILD NAV
-// ══════════════════════════════════════════════════
 function buildNav(){
   const nav=document.getElementById('nav');
-  T.forEach((t,i)=>{
-    const p=prog[i]||{};
+  DATA.forEach((t,i)=>{
+    const p=PROG[i]||{};
     const tot=t.exercises.length;
-    const sol=Object.values(p).filter(x=>x).length;
-    let cc='',ci='';
-    if(sol===tot&&tot>0){cc='done';ci='✓';}
-    else if(sol>0){cc='part';ci=sol;}
+    const sol=Object.keys(p).filter(k=>p[k]).length;
+    let dc='',di='';
+    if(sol===tot&&tot>0){dc='d';di='✓';}
+    else if(sol>0){dc='p';di=sol;}
     const b=document.createElement('button');
-    b.className='ni'+(i===0?' active':'');
+    b.className='ni'+(i===0?' on':'');
     b.dataset.i=i;
-    b.innerHTML=`<span class="ni-num">${String(i+1).padStart(2,'0')}</span><span class="ni-lbl">${t.title}</span><span class="ni-chk ${cc}">${ci}</span>`;
+    b.innerHTML=`<span class="ni-n">${String(i+1).padStart(2,'0')}</span>`+
+      `<span class="ni-l">${t.title}</span>`+
+      `<span class="ni-dot ${dc}">${di}</span>`;
     b.onclick=()=>go(i);
     nav.appendChild(b);
   });
 }
 
-// ══════════════════════════════════════════════════
-//  BUILD PAGES
-// ══════════════════════════════════════════════════
 function buildPages(){
   const main=document.getElementById('main');
-  T.forEach((t,ti)=>{
-    const p=prog[ti]||{};
-    const sol=Object.values(p).filter(x=>x).length;
-    const div=document.createElement('div');
-    div.className='page'+(ti===0?' active':'');
-    div.id='pg'+ti;
-    div.innerHTML=`
+  DATA.forEach((t,ti)=>{
+    const p=PROG[ti]||{};
+    const sol=Object.keys(p).filter(k=>p[k]).length;
+    const d=document.createElement('div');
+    d.className='pg'+(ti===0?' on':'');
+    d.id='pg'+ti;
+    d.innerHTML=`
 <div class="ph">
-  <div class="p-num">FEJEZET ${String(ti+1).padStart(2,'0')} / ${T.length}</div>
-  <h1 class="p-title">${t.title}</h1>
-  <p class="p-sub">${t.sub}</p>
+  <div class="p-n">FEJEZET ${String(ti+1).padStart(2,'0')} / ${DATA.length}</div>
+  <h1 class="p-t">${t.title}</h1>
+  <p class="p-s">${t.sub}</p>
 </div>
-<div class="th-sec">
-  <button class="th-tog${ti===0?' open':''}" onclick="togTh(this)">
-    <div class="th-icon">📖</div>
-    <span class="th-lbl">Elméleti áttekintés</span>
-    <span class="th-arr">▾</span>
+<div class="th">
+  <button class="th-hd${ti===0?' op':''}" onclick="togTh(this)">
+    <div class="th-ic">📖</div>
+    <span class="th-lb">Elméleti áttekintés</span>
+    <span class="th-ar">▾</span>
   </button>
-  <div class="th-body${ti===0?' open':''}">${t.theory}</div>
+  <div class="th-bd${ti===0?' op':''}">${t.theory}</div>
 </div>
-<div class="ex-hd"><h3>Feladatok</h3><span class="ex-cnt" id="ec${ti}">${sol}/${t.exercises.length} megoldva</span></div>
+<div class="ex-hd"><h3>Feladatok</h3><span class="ex-ct" id="ec${ti}">${sol}/${t.exercises.length} megoldva</span></div>
 <div id="el${ti}">${t.exercises.map((e,ei)=>buildEx(e,ti,ei)).join('')}</div>
-<div class="pg-nav">
+<div class="nav-btns">
   <button class="btn-nav" onclick="go(${ti-1})" ${ti===0?'disabled':''}>← Előző</button>
-  <button class="btn-nav" onclick="go(${ti+1})" ${ti===T.length-1?'disabled':''}>Következő →</button>
+  <button class="btn-nav" onclick="go(${ti+1})" ${ti===DATA.length-1?'disabled':''}>Következő →</button>
 </div>`;
-    main.appendChild(div);
+    main.appendChild(d);
   });
 }
 
 function buildEx(e,ti,ei){
-  const sol=!!(prog[ti]||{})[ei];
-  const tc={'exact':'tc','any':'tc','code':'to','regex':'ty','multi':'ta'}[e.type]||'';
+  const sol=!!((PROG[ti]||{})[ei]);
+  const tcs={cmd:'cmd',bash:'bash',c:'c',regex:'regex',mc:'mc'};
+  const tc=tcs[e.type]||'cmd';
   let inp='';
-  if(e.type==='multi'){
-    inp=`<div class="mc-opts" id="mc${ti}_${ei}">${e.opts.map((o,oi)=>`
-<button class="mc-opt${sol&&oi===e.correct?' ok':''}" onclick="chkMC(${ti},${ei},${oi})" ${sol?'disabled':''} data-i="${oi}">
-  <span class="mc-k">${String.fromCharCode(65+oi)}</span>${o}
-</button>`).join('')}</div>`;
+  if(e.type==='mc'){
+    inp=`<div class="mc-opts" id="mc${ti}_${ei}">`+
+      e.opts.map((o,oi)=>`<button class="mc-o${sol&&oi===e.correct?' ok':''}"
+        onclick="chkMC(${ti},${ei},${oi})" ${sol?'disabled':''}>
+        <span class="mc-k">${String.fromCharCode(65+oi)}</span>${escH(o)}</button>`).join('')+
+      '</div>';
   } else {
-    const ml=e.type==='code';
-    inp=`<div class="ex-hint">${e.hint?'💡 '+e.hint.replace(/`([^`]+)`/g,'<code>$1</code>'):''}</div>
-<textarea id="ta${ti}_${ei}" class="${ml?'ml':'sl'}">${e.placeholder||''}</textarea>
-<div class="ex-act">
-  <button class="btn-c" id="cb${ti}_${ei}" onclick="chkEx(${ti},${ei})" ${sol?'disabled':''}>
-    ${sol?'✓ Megoldva':'⚡ Ellenőrzés'}
-  </button>
-  ${!sol?`<button class="btn-h" onclick="showHint(${ti},${ei})">Tipp</button>`:''}
-  <button class="btn-r" onclick="resetEx(${ti},${ei})">↺ Visszaállítás</button>
-</div>`;
+    const ml=e.type==='bash'||e.type==='c';
+    inp=`<div class="ex-hint">${e.hint?'💡 '+escH(e.hint).replace(/`([^`]+)`/g,'<code>$1</code>'):''}</div>`+
+      `<textarea id="ta${ti}_${ei}" class="${ml?'ml':'sl'}">${escH(e.placeholder||'')}</textarea>`+
+      `<div class="acts">`+
+      `<button class="btn-go" id="cb${ti}_${ei}" onclick="chkEx(${ti},${ei})" ${sol?'disabled':''}>${sol?'✓ Megoldva':'⚡ Ellenőrzés'}</button>`+
+      `<button class="btn-tip" onclick="showTip(${ti},${ei})">💡 Tipp</button>`+
+      `<button class="btn-rst" onclick="rst(${ti},${ei})">↺</button>`+
+      `</div>`;
   }
-  return `<div class="ex${sol?' solved':''}" id="ex${ti}_${ei}">
-<div class="ex-h">
-  <div class="ex-badge ${sol?'s':'p'}" id="bd${ti}_${ei}">${sol?'✓':(ei+1)}</div>
-  <div class="ex-meta">
-    <div class="ex-type ${tc}">${e.typeLabel}</div>
-    <div class="ex-q">${e.q.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>')}</div>
+  return `<div class="ex${sol?' ok':''}" id="ex${ti}_${ei}">
+<div class="ex-top">
+  <div class="exn ${sol?'s':'p'}" id="en${ti}_${ei}">${sol?'✓':(ei+1)}</div>
+  <div class="ex-info">
+    <div class="ex-tp ${tc}">${tc.toUpperCase()}</div>
+    <div class="ex-q">${escH(e.q).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>')}</div>
   </div>
 </div>
-<div class="ex-b">${inp}<div class="fb" id="fb${ti}_${ei}"></div></div>
+<div class="ex-body">${inp}<div class="fb" id="fb${ti}_${ei}"></div></div>
 </div>`;
 }
 
-// ══════════════════════════════════════════════════
-//  CODEMIRROR
-// ══════════════════════════════════════════════════
+function escH(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function togTh(btn){
+  btn.classList.toggle('op');
+  btn.nextElementSibling.classList.toggle('op');
+}
+
+function go(i){
+  if(i<0||i>=DATA.length)return;
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg'+i).classList.add('on');
+  document.querySelector(`.ni[data-i="${i}"]`).classList.add('on');
+  CUR=i;window.scrollTo(0,0);
+  if(window.innerWidth<=768)document.getElementById('sb').classList.remove('op');
+}
+
 function initEds(){
-  T.forEach((t,ti)=>{
+  DATA.forEach((t,ti)=>{
     t.exercises.forEach((e,ei)=>{
-      if(e.type==='multi') return;
+      if(e.type==='mc')return;
       const ta=document.getElementById(`ta${ti}_${ei}`);
-      if(!ta) return;
-      const sl=e.type!=='code';
+      if(!ta)return;
+      const sl=e.type!=='bash'&&e.type!=='c';
+      const mode=e.type==='c'?'text/x-csrc':'shell';
       const cm=CodeMirror.fromTextArea(ta,{
-        mode:e.lang||'shell',theme:'dracula',
-        lineNumbers:!sl,lineWrapping:true,autofocus:false,
+        mode,theme:'dracula',lineNumbers:!sl,lineWrapping:true,autofocus:false,
         extraKeys:{Enter:sl?()=>chkEx(ti,ei):CodeMirror.Pass}
       });
-      if(sl) cm.setSize(null,42); else cm.setSize(null,145);
-      eds[`${ti}_${ei}`]=cm;
+      if(sl)cm.setSize(null,40);else cm.setSize(null,145);
+      ED[`${ti}_${ei}`]=cm;
     });
   });
 }
 
-// ══════════════════════════════════════════════════
-//  NAVIGATION
-// ══════════════════════════════════════════════════
-function go(i){
-  if(i<0||i>=T.length) return;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
-  document.getElementById('pg'+i).classList.add('active');
-  document.querySelector(`.ni[data-i="${i}"]`).classList.add('active');
-  cur=i; window.scrollTo(0,0);
-  if(window.innerWidth<=768) document.getElementById('sb').classList.remove('open');
-}
-
-function togTh(btn){
-  btn.classList.toggle('open');
-  btn.nextElementSibling.classList.toggle('open');
-}
-
-// ══════════════════════════════════════════════════
-//  CHECKING
-// ══════════════════════════════════════════════════
 function getVal(ti,ei){
   const k=`${ti}_${ei}`;
-  return eds[k]?eds[k].getValue().trim():(document.getElementById(`ta${ti}_${ei}`)||{value:''}).value.trim();
+  return ED[k]?ED[k].getValue().trim():(document.getElementById(`ta${ti}_${ei}`)||{value:''}).value.trim();
 }
 
-function norm(s){ return s.replace(/\s+/g,' ').trim(); }
+function norm(s){return String(s).replace(/\s+/g,' ').trim().replace(/['"]/g,'"');}
 
 function chkMC(ti,ei,chosen){
-  const e=T[ti].exercises[ei];
+  const e=DATA[ti].exercises[ei];
   const ok=chosen===e.correct;
-  document.querySelectorAll(`#mc${ti}_${ei} .mc-opt`).forEach((o,i)=>{
+  document.querySelectorAll(`#mc${ti}_${ei} .mc-o`).forEach((o,i)=>{
     o.disabled=true;
-    if(i===e.correct) o.classList.add('ok');
-    else if(i===chosen&&!ok) o.classList.add('ng');
+    if(i===e.correct)o.classList.add('ok');
+    else if(i===chosen&&!ok)o.classList.add('ng');
   });
-  fb(ti,ei,ok,(ok?'✓ Helyes! ':'✗ Nem ez. ')+e.exp);
-  if(ok) mark(ti,ei);
+  setFb(ti,ei,ok,(ok?'✓ Helyes! ':'✗ Nem ez. ')+e.exp);
+  if(ok)mark(ti,ei);
 }
 
 function chkEx(ti,ei){
-  const e=T[ti].exercises[ei];
+  const e=DATA[ti].exercises[ei];
   const val=getVal(ti,ei);
-  if(!val){fb(ti,ei,false,'✗ Adj meg egy választ!');return;}
+  if(!val){setFb(ti,ei,false,'✗ Adj meg egy választ!');return;}
   const btn=document.getElementById(`cb${ti}_${ei}`);
   btn.disabled=true;
 
-  if(e.type==='exact'||e.type==='any'){
-    const ok=e.expected.some(x=>norm(val)===norm(x));
-    fb(ti,ei,ok,ok?'✓ '+e.okMsg:'✗ '+e.errMsg);
-    if(ok) mark(ti,ei); else btn.disabled=false;
+  if(e.type==='cmd'){
+    const ok=e.accepted.some(a=>norm(val)===norm(a));
+    setFb(ti,ei,ok,ok?'✓ '+e.ok:'✗ '+e.err);
+    if(ok)mark(ti,ei);else btn.disabled=false;
   } else if(e.type==='regex'){
-    chkRegex(ti,ei,val);
-  } else if(e.type==='code'){
+    chkRegex(ti,ei,val,e);
+  } else if(e.type==='bash'||e.type==='c'){
     chkCode(ti,ei,val,e);
   }
 }
 
-function chkRegex(ti,ei,pat){
-  const e=T[ti].exercises[ei];
+function chkRegex(ti,ei,pat,e){
+  const btn=document.getElementById(`cb${ti}_${ei}`);
   try{
     const stripped=pat.replace(/^\^/,'').replace(/\$$/,'');
     const re=new RegExp('^'+stripped+'$');
-    const allM=e.testCases.match.every(s=>re.test(s));
-    const noneM=e.testCases.nomatch.every(s=>!re.test(s));
-    const ok=allM&&noneM;
-    if(ok){
-      fb(ti,ei,true,`✓ Helyes regex! Illeszkedett: ${e.testCases.match.map(s=>`<code>${s}</code>`).join(', ')}`);
+    const allM=e.match.every(s=>re.test(s));
+    const noneM=e.nomatch.every(s=>!re.test(s));
+    if(allM&&noneM){
+      setFb(ti,ei,true,'✓ Helyes regex! Illeszkedett: '+e.match.map(s=>`<code>${s}</code>`).join(', '));
       mark(ti,ei);
     } else {
-      const fM=e.testCases.match.filter(s=>!re.test(s));
-      const fN=e.testCases.nomatch.filter(s=>re.test(s));
-      let msg='✗ Nem teljesen helyes. ';
-      if(fM.length) msg+=`Nem illeszkedett (kellene): ${fM.map(s=>`<code>${s}</code>`).join(', ')}. `;
-      if(fN.length) msg+=`Illeszkedett (nem kellett): ${fN.map(s=>`<code>${s}</code>`).join(', ')}.`;
-      fb(ti,ei,false,msg);
-      document.getElementById(`cb${ti}_${ei}`).disabled=false;
+      const fM=e.match.filter(s=>!re.test(s));
+      const fN=e.nomatch.filter(s=>re.test(s));
+      let msg='✗ Nem teljesen jó. ';
+      if(fM.length)msg+='Kellene illeszkednie: '+fM.map(s=>`<code>${s}</code>`).join(', ')+'. ';
+      if(fN.length)msg+='Nem kellene: '+fN.map(s=>`<code>${s}</code>`).join(', ')+'.';
+      setFb(ti,ei,false,msg);btn.disabled=false;
     }
-  }catch(err){
-    fb(ti,ei,false,'✗ Érvénytelen regex: '+err.message);
-    document.getElementById(`cb${ti}_${ei}`).disabled=false;
-  }
+  }catch(err){setFb(ti,ei,false,'✗ Érvénytelen regex: '+err.message);btn.disabled=false;}
 }
 
 function chkCode(ti,ei,val,e){
   const btn=document.getElementById(`cb${ti}_${ei}`);
   const missing=[];
-  const ok=e.patterns.every((group,gi)=>{
-    const hit=group.some(re=>re.test(val));
-    if(!hit) missing.push(e.hints[gi]||`Hiányzik a ${gi+1}. elem`);
+  const ok=e.checks.every(ch=>{
+    const hit=new RegExp(ch.re,'i').test(val);
+    if(!hit)missing.push(ch.msg);
     return hit;
   });
-  if(ok){
-    fb(ti,ei,true,'✓ '+e.okMsg);
-    mark(ti,ei);
-  } else {
-    fb(ti,ei,false,'✗ Még nem teljesen jó:<br>• '+missing.join('<br>• '));
-    btn.disabled=false;
-  }
+  if(ok){setFb(ti,ei,true,'✓ '+e.ok);mark(ti,ei);}
+  else{setFb(ti,ei,false,'✗ Még nem teljes:<br>• '+missing.join('<br>• '));btn.disabled=false;}
 }
 
-function showHint(ti,ei){
-  const e=T[ti].exercises[ei];
-  const el=document.getElementById(`fb${ti}_${ei}`);
-  el.className='fb show hint';
-  el.innerHTML='💡 '+(e.hint||'Nézd meg az elméleti részt!').replace(/`([^`]+)`/g,'<code>$1</code>');
+function showTip(ti,ei){
+  const e=DATA[ti].exercises[ei];
+  const fb=document.getElementById(`fb${ti}_${ei}`);
+  fb.className='fb on tip';
+  fb.innerHTML='💡 '+(e.hint||'Nézd meg az elméleti részt!').replace(/`([^`]+)`/g,'<code>$1</code>');
 }
 
-function fb(ti,ei,ok,msg){
-  const el=document.getElementById(`fb${ti}_${ei}`);
-  el.className='fb show '+(ok?'ok':'err');
-  el.innerHTML=msg;
+function setFb(ti,ei,ok,msg){
+  const fb=document.getElementById(`fb${ti}_${ei}`);
+  fb.className='fb on '+(ok?'ok':'er');
+  fb.innerHTML=msg;
 }
 
 function mark(ti,ei){
-  if(!prog[ti]) prog[ti]={};
-  prog[ti][ei]=true;
-  localStorage.setItem('lx_prog',JSON.stringify(prog));
-  const bd=document.getElementById(`bd${ti}_${ei}`);
-  if(bd){bd.className='ex-badge s';bd.textContent='✓';}
-  const ex=document.getElementById(`ex${ti}_${ei}`);
-  if(ex) ex.classList.add('solved');
+  if(!PROG[ti])PROG[ti]={};
+  PROG[ti][ei]=true;
+  localStorage.setItem('lxp',JSON.stringify(PROG));
+  const en=document.getElementById(`en${ti}_${ei}`);
+  if(en){en.className='exn s';en.textContent='✓';}
+  document.getElementById(`ex${ti}_${ei}`)?.classList.add('ok');
   const btn=document.getElementById(`cb${ti}_${ei}`);
   if(btn){btn.disabled=true;btn.innerHTML='✓ Megoldva';}
-  updProg(); updNav(ti);
+  updProg();updNav(ti);
 }
 
-function resetEx(ti,ei){
-  if(prog[ti]) delete prog[ti][ei];
-  localStorage.setItem('lx_prog',JSON.stringify(prog));
-  const bd=document.getElementById(`bd${ti}_${ei}`);
-  if(bd){bd.className='ex-badge p';bd.textContent=ei+1;}
-  const ex=document.getElementById(`ex${ti}_${ei}`);
-  if(ex) ex.classList.remove('solved');
+function rst(ti,ei){
+  if(PROG[ti])delete PROG[ti][ei];
+  localStorage.setItem('lxp',JSON.stringify(PROG));
+  const en=document.getElementById(`en${ti}_${ei}`);
+  if(en){en.className='exn p';en.textContent=ei+1;}
+  document.getElementById(`ex${ti}_${ei}`)?.classList.remove('ok');
   const btn=document.getElementById(`cb${ti}_${ei}`);
   if(btn){btn.disabled=false;btn.innerHTML='⚡ Ellenőrzés';}
-  const fbEl=document.getElementById(`fb${ti}_${ei}`);
-  if(fbEl) fbEl.className='fb';
+  const fb=document.getElementById(`fb${ti}_${ei}`);
+  if(fb)fb.className='fb';
   const k=`${ti}_${ei}`;
-  if(eds[k]) eds[k].setValue(T[ti].exercises[ei].placeholder||'');
+  if(ED[k])ED[k].setValue(DATA[ti].exercises[ei].placeholder||'');
   const mc=document.getElementById(`mc${ti}_${ei}`);
-  if(mc) mc.querySelectorAll('.mc-opt').forEach(o=>{o.disabled=false;o.classList.remove('ok','ng');});
-  updProg(); updNav(ti);
+  if(mc)mc.querySelectorAll('.mc-o').forEach(o=>{o.disabled=false;o.classList.remove('ok','ng');});
+  updProg();updNav(ti);
 }
 
 function updProg(){
   let tot=0,sol=0;
-  T.forEach((t,ti)=>{
+  DATA.forEach((t,ti)=>{
     tot+=t.exercises.length;
-    sol+=Object.values(prog[ti]||{}).filter(x=>x).length;
+    sol+=Object.keys(PROG[ti]||{}).filter(k=>PROG[ti][k]).length;
   });
   const pct=tot?Math.round(sol/tot*100):0;
-  document.getElementById('pfill').style.width=pct+'%';
-  document.getElementById('ptxt').textContent=`${pct}% kész · ${sol}/${tot} feladat`;
+  document.getElementById('pbf').style.width=pct+'%';
+  document.getElementById('pbt').textContent=`${pct}% · ${sol}/${tot} feladat megoldva`;
 }
 
 function updNav(ti){
-  const t=T[ti];
-  const p=prog[ti]||{};
+  const t=DATA[ti];
+  const p=PROG[ti]||{};
   const tot=t.exercises.length;
-  const sol=Object.values(p).filter(x=>x).length;
-  const nc=document.querySelector(`.ni[data-i="${ti}"] .ni-chk`);
-  if(!nc) return;
-  if(sol===tot&&tot>0){nc.className='ni-chk done';nc.textContent='✓';}
-  else if(sol>0){nc.className='ni-chk part';nc.textContent=sol;}
-  else{nc.className='ni-chk';nc.textContent='';}
+  const sol=Object.keys(p).filter(k=>p[k]).length;
+  const dot=document.querySelector(`.ni[data-i="${ti}"] .ni-dot`);
+  if(!dot)return;
+  if(sol===tot&&tot>0){dot.className='ni-dot d';dot.textContent='✓';}
+  else if(sol>0){dot.className='ni-dot p';dot.textContent=sol;}
+  else{dot.className='ni-dot';dot.textContent='';}
   const ec=document.getElementById('ec'+ti);
-  if(ec) ec.textContent=`${sol}/${tot} megoldva`;
+  if(ec)ec.textContent=`${sol}/${tot} megoldva`;
 }
 
-// ══════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════
-buildNav();
-buildPages();
-setTimeout(initEds,50);
+buildNav();buildPages();
+setTimeout(initEds,60);
 updProg();
+
 </script>
 </body>
 </html>
